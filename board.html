@@ -3,6 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Not a public page. This is the planning board, deployed alongside the
+     site only because it is convenient to reach from anywhere.
+
+     Note this is a noindex rather than a robots.txt Disallow. Disallow stops
+     a crawler fetching the page, which also stops it ever reading this tag —
+     so a URL that leaks into a link somewhere can still end up listed, with
+     no way to remove it. Letting crawlers fetch and telling them not to index
+     is the combination that actually keeps it out. -->
+<meta name="robots" content="noindex, nofollow">
+
 <title>Ink Circuit — board</title>
 <style>
   :root{
