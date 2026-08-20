@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44">
+  <!-- Ink Circuit. The car from the game, drawn as a solid silhouette:
+       the line-art version turns to mush below about 24px. -->
+  <rect width="44" height="44" rx="7" fill="#F3EEE3"/>
+  <g transform="translate(22.0,22.0) scale(0.9744) rotate(-90)">
+    <rect x="4.6" y="-13.4" width="10.8" height="6.0" rx="1.8" fill="#22242A"/>
+    <rect x="4.6" y="7.4" width="10.8" height="6.0" rx="1.8" fill="#22242A"/>
+    <rect x="-15.4" y="-13.4" width="10.8" height="6.0" rx="1.8" fill="#22242A"/>
+    <rect x="-15.4" y="7.4" width="10.8" height="6.0" rx="1.8" fill="#22242A"/>
+    <rect x="-20" y="-9.5" width="5" height="19" rx="1.2" fill="#22242A"/>
+    <rect x="14.6" y="-11.4" width="4.8" height="22.8" rx="1.2" fill="#22242A"/>
+    <polygon points="17,0 6,-5.0 -2,-7.0 -13,-6.6 -16.5,-3.4 -16.5,3.4 -13,6.6 -2,7.0 6,5.0" fill="#22242A"/>
+    <rect x="-12.5" y="-11" width="13" height="6" rx="1.8" fill="#22242A"/>
+    <rect x="-12.5" y="5" width="13" height="6" rx="1.8" fill="#22242A"/>
+    <ellipse cx="-1" cy="0" rx="3.2" ry="2.4" fill="#F3EEE3"/>
+  </g>
+</svg>

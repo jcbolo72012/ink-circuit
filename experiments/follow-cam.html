@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ink Circuit — follow-camera experiment</title>
+<style>
+  :root{
+    --paper:#F3EEE3; --paper-warm:#EDE6D8; --ink:#22242A;
+    --ink-soft:rgba(34,36,42,.55); --ink-faint:rgba(34,36,42,.18);
+    --red:#9E3B32; --ghost:#5A7183;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--paper-warm); color:var(--ink); font-family:var(--serif);
+    min-height:100vh; display:grid; place-items:center; padding:16px;
+  }
+  .card{
+    width:min(1120px,100%); background:var(--paper);
+    border:1px solid var(--ink-faint); padding:clamp(14px,2vw,26px);
+    display:grid; grid-template-rows:auto 1fr auto; gap:12px;
+  }
+  .row{display:flex;align-items:baseline;justify-content:space-between;gap:16px;}
+  h1{font-size:clamp(14px,1.6vw,19px);font-weight:400;letter-spacing:.04em;}
+  h1 em{font-style:italic;color:var(--ink-soft);}
+  .note{font-size:11.5px;font-style:italic;color:var(--ink-soft);}
+  .stage{position:relative;aspect-ratio:16/9;min-height:0;touch-action:none;}
+  .stage canvas{position:absolute;inset:0;width:100%;height:100%;}
+  .readout{
+    position:absolute;top:8px;right:10px;text-align:right;
+    font-variant-numeric:tabular-nums;pointer-events:none;
+  }
+  .readout .t{font-size:clamp(20px,2.6vw,30px);letter-spacing:.02em;}
+  .readout .s{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);}
+  .mini{
+    position:absolute;left:10px;bottom:10px;
+    width:clamp(110px,15vw,168px);aspect-ratio:3600/3060;
+    border:1px solid var(--ink-faint);background:rgba(243,238,227,.82);
+  }
+  .prompt{
+    position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);
+    font-size:13px;font-style:italic;color:var(--ink-soft);white-space:nowrap;
+  }
+  .prompt[hidden]{display:none;}
+  .ctl{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--ink-soft);}
+  .ctl label{display:flex;gap:6px;align-items:center;letter-spacing:.08em;text-transform:uppercase;font-size:10px;}
+  input[type=range]{width:110px;}
+  button{
+    font-family:inherit;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    background:none;border:1px solid var(--ink-faint);color:var(--ink-soft);
+    padding:7px 12px;cursor:pointer;
+  }
+  button:hover{border-color:var(--ink);color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="row">
+    <h1>Zandvoort <em>— follow-camera experiment</em></h1>
+    <span class="note" id="meta">—</span>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="c-world"></canvas>
+    <canvas id="c-car"></canvas>
+    <canvas class="mini" id="c-mini"></canvas>
+    <div class="readout">
+      <p class="t" id="r-time">0:00.00</p>
+      <p class="s" id="r-sub">arrow keys</p>
+    </div>
+    <p class="prompt" id="prompt">Press an arrow key to start</p>
+  </div>
+
+  <div class="ctl">
+    <label>Zoom <input type="range" id="zoom" min="0.30" max="1.10" step="0.02" value="0.58"></label>
+    <label>Look ahead <input type="range" id="lead" min="0" max="260" step="10" value="120"></label>
+    <button id="reset">Restart</button>
+    <span id="hint">Real geometry at true proportions — about a 3-minute lap. Watch the minimap.</span>
+  </div>
+</div>
+
+<script type="module">
+import {
+  FIXED, MAX_SPD, IN_UP, IN_DOWN, IN_LEFT, IN_RIGHT,
+  trackFromPoints, createSim, edgePoints
+} from '../sim.js';
+
+/* ---------------------------------------------------------------------
+   The experiment: can a real circuit work if the camera follows the car?
+
+   At true proportions Zandvoort is about 2400x2040 units — roughly four
+   screens wide. Sections stop overlapping (which is what killed the
+   fit-to-screen version) but the circuit can no longer be seen at once, so
+   the whole feel of the game changes. That trade is the thing to judge.
+   --------------------------------------------------------------------- */
+
+/* 3600x3060 is the smallest world in which real Zandvoort has no corners
+   tighter than the car can take and no sections overlapping — measured, not
+   guessed. That makes the circuit about 15,200 units, roughly a three-minute
+   lap against the seven seconds of a generated one. */
+const WORLD_W = 3600, WORLD_H = 3060, HALF_W = 34;
+
+const res = await fetch('../circuits/zandvoort.json');
+const data = await res.json();
+const track = trackFromPoints(data.points, {
+  name: data.name, halfWidth: HALF_W,
+  width: WORLD_W, height: WORLD_H,
+  samples: 1200             // more samples: it is seen much closer up
+});
+
+document.getElementById('meta').textContent =
+  Math.round(track.length) + ' units \u00b7 ' + data.lengthMetres + ' m real \u00b7 ' +
+  track.report.proximity.overlapping + ' overlaps';
+
+const INK = '#22242A', PAPER = '#F3EEE3', RED = '#9E3B32';
+const OUTER = edgePoints(track, 1, 0), INNER = edgePoints(track, -1, 1.9);
+const { path: PATH, normals: NORMALS, n: N } = track;
+
+/* ---- canvases ---- */
+const stage = document.getElementById('stage');
+function layer(id){
+  const el = document.getElementById(id);
+  return { el, ctx: el.getContext('2d') };
+}
+const world = layer('c-world'), carL = layer('c-car'), mini = layer('c-mini');
+let VW = 0, VH = 0, dpr = 1;
+
+function resize(){
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const r = stage.getBoundingClientRect();
+  VW = r.width; VH = r.height;
+  for (const l of [world, carL]){
+    l.el.width = Math.round(VW*dpr); l.el.height = Math.round(VH*dpr);
+  }
+  const m = mini.el.getBoundingClientRect();
+  mini.el.width = Math.round(m.width*dpr); mini.el.height = Math.round(m.height*dpr);
+  drawMiniTrack();
+}
+addEventListener('resize', resize);
+
+/* ---- camera ---- */
+let zoom = +document.getElementById('zoom').value;
+let lead = +document.getElementById('lead').value;
+document.getElementById('zoom').addEventListener('input', e => { zoom = +e.target.value; });
+document.getElementById('lead').addEventListener('input', e => { lead = +e.target.value; });
+
+/* The camera sits ahead of the car in its direction of travel, so the player
+   sees where they are going rather than where they have been. It eases toward
+   that point instead of snapping, or every steering input would jolt the
+   whole world. */
+const cam = { x: 0, y: 0 };
+function cameraTarget(pose){
+  return {
+    x: pose.x + Math.cos(pose.h) * lead,
+    y: pose.y + Math.sin(pose.h) * lead
+  };
+}
+
+/* ---- drawing ---- */
+function applyCamera(ctx){
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.translate(VW/2, VH/2);
+  ctx.scale(zoom, zoom);
+  ctx.translate(-cam.x, -cam.y);
+}
+
+/* Only the part of the loop near the camera is worth drawing. At this zoom
+   most of the circuit is off screen, and stroking all 900 samples every frame
+   is wasted work. */
+function visibleRange(){
+  const near = track.path.reduce((best, p, i) => {
+    const d = (p[0]-cam.x)**2 + (p[1]-cam.y)**2;
+    return d < best.d ? { d, i } : best;
+  }, { d: Infinity, i: 0 }).i;
+  const span = Math.ceil((Math.max(VW, VH) / zoom) / track.spacing) + 40;
+  return { from: near - span, to: near + span };
+}
+
+function strokeSlice(ctx, pts, from, to, width, alpha){
+  ctx.globalAlpha = alpha; ctx.strokeStyle = INK; ctx.lineWidth = width/zoom;
+  ctx.beginPath();
+  for (let k = from; k <= to; k++){
+    const p = pts[((k % N) + N) % N];
+    if (k === from) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+  }
+  ctx.stroke(); ctx.globalAlpha = 1;
+}
+
+function drawWorld(){
+  const ctx = world.ctx;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,world.el.width, world.el.height);
+  applyCamera(ctx);
+  const { from, to } = visibleRange();
+
+  ctx.setLineDash([6/zoom, 14/zoom]);
+  strokeSlice(ctx, PATH, from, to, 1, 0.18);
+  ctx.setLineDash([]);
+  strokeSlice(ctx, OUTER, from, to, 2, 0.88);
+  strokeSlice(ctx, INNER, from, to, 2, 0.88);
+
+  // start / finish
+  const p0 = PATH[0], n0 = NORMALS[0];
+  ctx.globalAlpha = 1; ctx.strokeStyle = RED; ctx.lineWidth = 2/zoom;
+  ctx.beginPath();
+  for (let k = -8; k <= 8; k++){
+    const t = k/8, cx = p0[0] + n0[0]*HALF_W*t, cy = p0[1] + n0[1]*HALF_W*t;
+    const tx = -n0[1], ty = n0[0];
+    ctx.moveTo(cx - tx*5, cy - ty*5); ctx.lineTo(cx + tx*5, cy + ty*5);
+  }
+  ctx.stroke();
+}
+
+function rounded(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+}
+
+function drawCar(pose){
+  const ctx = carL.ctx;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,carL.el.width, carL.el.height);
+  applyCamera(ctx);
+  ctx.translate(pose.x, pose.y); ctx.rotate(pose.h);
+  ctx.strokeStyle = INK; ctx.fillStyle = PAPER; ctx.lineWidth = 1.5/zoom;
+  for (const [wx,wy] of [[10,-10.4],[10,10.4],[-10,-10.4],[-10,10.4]])
+    rounded(ctx, wx-5, wy-2.6, 10, 5.2, 1.6);
+  ctx.fillStyle = INK; rounded(ctx, -20, -9, 4.5, 18, 1); ctx.fillStyle = PAPER;
+  ctx.beginPath();
+  ctx.moveTo(17,0); ctx.lineTo(6,-4.4); ctx.lineTo(-2,-6.4); ctx.lineTo(-13,-6);
+  ctx.lineTo(-16,-3); ctx.lineTo(-16,3); ctx.lineTo(-13,6); ctx.lineTo(-2,6.4); ctx.lineTo(6,4.4);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  for (const sd of [-1,1]) rounded(ctx, -12, sd>0?5:-10.5, 12, 5.5, 1.6);
+  ctx.beginPath(); ctx.ellipse(-1,0,3.4,2.5,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  rounded(ctx, 15, -11, 4, 22, 1);
+}
+
+/* A follow-camera needs a minimap, or the player has no idea where they are
+   on the lap — which is exactly the orientation the fit-to-screen version
+   gave away for free. */
+function drawMiniTrack(){
+  const ctx = mini.ctx, w = mini.el.width, h = mini.el.height;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,w,h);
+  const s = Math.min(w/WORLD_W, h/WORLD_H);
+  ctx.setTransform(s,0,0,s,(w-WORLD_W*s)/2,(h-WORLD_H*s)/2);
+  ctx.strokeStyle = INK; ctx.globalAlpha = 0.5; ctx.lineWidth = (HALF_W*1.6)/s*0.06;
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++){
+    const p = PATH[i % N];
+    if (i === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+  }
+  ctx.stroke(); ctx.globalAlpha = 1;
+}
+function drawMiniCar(pose){
+  drawMiniTrack();
+  const ctx = mini.ctx, w = mini.el.width, h = mini.el.height;
+  const s = Math.min(w/WORLD_W, h/WORLD_H);
+  ctx.setTransform(s,0,0,s,(w-WORLD_W*s)/2,(h-WORLD_H*s)/2);
+  ctx.fillStyle = RED;
+  ctx.beginPath(); ctx.arc(pose.x, pose.y, 26, 0, Math.PI*2); ctx.fill();
+}
+
+/* ---- input and loop ---- */
+const keys = Object.create(null);
+const ARROWS = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
+let sim = createSim(track), started = false, acc = 0, last = performance.now();
+
+addEventListener('keydown', e => {
+  if (!ARROWS.includes(e.key)) return;
+  e.preventDefault();
+  if (!started){ started = true; sim.start(); document.getElementById('prompt').hidden = true; }
+  keys[e.key] = true;
+});
+addEventListener('keyup', e => { if (ARROWS.includes(e.key)) keys[e.key] = false; });
+
+document.getElementById('reset').addEventListener('click', () => {
+  sim = createSim(track); started = false; acc = 0;
+  document.getElementById('prompt').hidden = false;
+  document.getElementById('r-time').textContent = '0:00.00';
+  document.getElementById('r-sub').textContent = 'arrow keys';
+  const g = PATH[track.gridIndex];
+  cam.x = g[0]; cam.y = g[1];
+});
+
+const inputMask = () =>
+  (keys.ArrowUp?IN_UP:0)|(keys.ArrowDown?IN_DOWN:0)|(keys.ArrowLeft?IN_LEFT:0)|(keys.ArrowRight?IN_RIGHT:0);
+
+const fmt = ms => {
+  const t = Math.max(0, ms)/1000;
+  return Math.floor(t/60) + ':' + (t%60 < 10 ? '0' : '') + (t%60).toFixed(2);
+};
+
+function pose(alpha){
+  const c = sim.car, p = sim.prev;
+  let dh = c.h - p.h;
+  while (dh >  Math.PI) dh -= Math.PI*2;
+  while (dh < -Math.PI) dh += Math.PI*2;
+  return { x: p.x + (c.x-p.x)*alpha, y: p.y + (c.y-p.y)*alpha, h: p.h + dh*alpha };
+}
+
+resize();
+{ const g = PATH[track.gridIndex]; cam.x = g[0]; cam.y = g[1]; }
+
+function frame(now){
+  const dt = Math.min(0.25, (now - last)/1000);
+  last = now;
+
+  if (started && sim.state === 'running'){
+    acc += dt;
+    while (acc >= FIXED){
+      sim.step(inputMask());
+      acc -= FIXED;
+      if (sim.state !== 'running'){
+        document.getElementById('r-sub').textContent =
+          sim.state === 'done' ? sim.hits + ' contacts' : sim.state;
+        break;
+      }
+    }
+    document.getElementById('r-time').textContent = fmt(sim.elapsedMs());
+  }
+
+  const p = pose(sim.state === 'running' ? acc/FIXED : 1);
+  const target = cameraTarget(p);
+  // ease toward the target so steering doesn't jolt the whole world
+  const k = 1 - Math.pow(0.0016, dt);
+  cam.x += (target.x - cam.x) * k;
+  cam.y += (target.y - cam.y) * k;
+
+  drawWorld();
+  drawCar(p);
+  drawMiniCar(p);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

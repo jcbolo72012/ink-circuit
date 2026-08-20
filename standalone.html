@@ -1,0 +1,4376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EDE6D8">
+
+<!-- The description is what actually appears under the link in a search
+     result, so it says what the game is rather than being clever. Keywords
+     are ignored by every major engine and are here only because they cost
+     nothing; the words that matter are the ones in the title, description
+     and page text. -->
+<meta name="description" content="A free daily racing game. One Formula 1 style circuit a day, one lap, one attempt. Race a ghost car, beat your time, share your result. Plays in any browser.">
+<meta name="keywords" content="daily game, racing game, F1 game, formula 1 game, arcade racing, browser game, free online game, time trial, ghost car, daily puzzle, wordle for racing, lap time, top down racing">
+<meta name="author" content="Ink Circuit">
+<link rel="canonical" href="https://inkcircuit.ink/">
+<meta name="robots" content="index, follow">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ink Circuit">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<!-- What a shared link looks like in a message, on social, in Slack. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ink Circuit">
+<meta property="og:url" content="https://inkcircuit.ink/">
+<meta property="og:title" content="Ink Circuit — a racing lap a day">
+<meta property="og:description" content="One circuit, one lap, one attempt a day. A free daily racing game in the browser.">
+<meta property="og:image" content="https://inkcircuit.ink/icons/icon-512.png">
+<meta property="og:image:alt" content="A racing car drawn in ink on paper">
+<meta property="og:locale" content="en">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ink Circuit — a racing lap a day">
+<meta name="twitter:description" content="One circuit, one lap, one attempt a day. A free daily racing game in the browser.">
+<meta name="twitter:image" content="https://inkcircuit.ink/icons/icon-512.png">
+
+<title>Ink Circuit — a daily racing game, one lap a day</title>
+
+<!-- Structured data. This is the part search engines actually read to work
+     out that this is a playable game rather than an article about one, which
+     is what gets it into game listings rather than plain results. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "Ink Circuit",
+  "url": "https://inkcircuit.ink/",
+  "description": "A free daily racing game. One procedurally generated Formula 1 style circuit, one lap, one attempt each day.",
+  "image": "https://inkcircuit.ink/icons/icon-512.png",
+  "genre": ["Racing", "Arcade", "Time trial", "Daily puzzle"],
+  "gamePlatform": ["Web browser", "Mobile browser"],
+  "applicationCategory": "Game",
+  "operatingSystem": "Any",
+  "playMode": "SinglePlayer",
+  "inLanguage": "en",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+
+<!-- Icons. The SVG is what modern browsers use and scales to any size; the
+     PNGs and .ico are fallbacks. The 16px PNG drops the cockpit detail,
+     which just muddies the shape at that size. -->
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="alternate icon" href="icons/favicon.ico">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="icons/site.webmanifest">
+
+<!-- Vercel Web Analytics. The plain-HTML method: a queue stub, then the real
+     script. The @vercel/analytics package is a React component and needs a
+     bundler, so it can't be used here — and isn't needed, since the script
+     does the same job. The endpoint only exists on Vercel, so it is skipped
+     when the page is opened from disk rather than 404ing on every load. -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  if (location.protocol !== 'file:') {
+    var s = document.createElement('script');
+    s.defer = true;
+    s.src = '/_vercel/insights/script.js';
+    document.head.appendChild(s);
+  }
+</script>
+<style>
+  :root{
+    --paper:      #F3EEE3;
+    --paper-warm: #EDE6D8;
+    --ink:        #22242A;
+    --ink-soft:   rgba(34,36,42,.55);
+    --ink-faint:  rgba(34,36,42,.22);   /* 1.5:1 — hairlines and borders only */
+    /* 5.4:1 against paper, so it clears AA for text at any size. Small labels
+       must use this and not --ink-faint, which is a line colour that happens
+       to be dark rather than a text colour. */
+    --ink-label:  rgba(34,36,42,.70);
+    --red:        #9E3B32;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    /* A checkered flag, turned right down. It sits behind the card, never
+       under the track, so it can carry the theme without competing with the
+       circuit — the grid we tried on the card itself was too busy for exactly
+       that reason.
+
+       Swap --bg-check to 0 for a plain surface, or see the notebook-grid
+       alternative kept below. */
+    --bg-square: 44px;
+    --bg-check: rgba(34,36,42,.042);
+    background-color: var(--paper-warm);
+    background-image:
+      repeating-conic-gradient(var(--bg-check) 0% 25%, transparent 0% 50%);
+    background-size: var(--bg-square) var(--bg-square);
+    background-position: center;
+    background-attachment: fixed;   /* the card moves, the flag doesn't */
+    color: var(--ink);
+    font-family: var(--serif);
+    display:grid; place-items:center;
+    padding:24px;
+    -webkit-font-smoothing:antialiased;
+    /* stop pull-to-refresh and rubber-banding from firing mid-lap */
+    overscroll-behavior:none;
+    /* dvh is the height actually on screen. vh counts the strip behind the
+       address bar as well, so a card sized to it hangs off the bottom until
+       the bar hides — which is exactly when someone is trying to start. */
+    min-height:100vh;
+    min-height:100dvh;
+  }
+
+  /* Notebook grid, if the flag ever feels too on the nose. Replace the two
+     background-image lines on body with these:
+
+       background-image:
+         linear-gradient(rgba(34,36,42,.05) 1px, transparent 1px),
+         linear-gradient(90deg, rgba(34,36,42,.05) 1px, transparent 1px);
+       background-size: 22px 22px;
+  */
+  .card{
+    width:min(1120px,100%);
+    aspect-ratio:16/10;
+    max-height:calc(100vh - 48px);
+    max-height:calc(100dvh - 48px);
+    background:var(--paper);
+    background-image:var(--grain);
+    border:1px solid var(--ink-faint);
+    display:grid;
+    grid-template-rows:auto 1fr auto auto;   /* header, stage, links, pad */
+    padding:clamp(18px,2.4vw,34px);
+    gap:clamp(8px,1.4vw,18px);
+    position:relative;
+  }
+  .card::after{
+    content:""; position:absolute; inset:clamp(9px,1.1vw,16px);
+    border:1px solid rgba(34,36,42,.10); pointer-events:none;
+  }
+
+  .row{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; }
+  .foot{ justify-content:flex-end; }
+  .wordmark{
+    font-size:clamp(15px,1.7vw,21px); letter-spacing:.04em;
+    font-weight:400; margin:0;      /* it's an h1 for structure, not for size */
+  }
+  .wordmark em{ font-style:italic; color:var(--ink-soft); }
+  .daynum{
+    font-size:clamp(10px,1.05vw,12px); letter-spacing:.2em;
+    text-transform:uppercase; color:var(--ink-soft);
+  }
+
+  .stage{ position:relative; min-height:0; touch-action:none; }
+  .stage canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  .prompt{
+    position:absolute; left:50%; bottom:5%; transform:translateX(-50%);
+    font-size:clamp(10px,1.05vw,12px); letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-soft); background:rgba(243,238,227,.88);
+    padding:7px 13px; border:1px solid var(--ink-faint); white-space:nowrap;
+    transition:opacity .35s ease;
+  }
+  .prompt[hidden]{ display:none; }
+
+  .readout{ position:absolute; top:0; right:0; text-align:right; pointer-events:none; }
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+  }
+  .readout dt{
+    font-size:clamp(8.5px,.95vw,10px); letter-spacing:.2em;
+    text-transform:uppercase; color:var(--ink-label);
+  }
+  .readout dd{
+    font-size:clamp(17px,2.1vw,26px);
+    font-variant-numeric:tabular-nums lining-nums;
+    line-height:1.05; margin-bottom:8px;
+  }
+  .readout .hit{ color:var(--red); }
+
+  /* Splits sit quieter than the running clock — present, not competing. */
+  .splits{ margin-top:2px; }
+  .splits .sp{
+    display:flex; justify-content:flex-end; align-items:baseline; gap:9px;
+    font-variant-numeric:tabular-nums lining-nums;
+    font-size:clamp(11px,1.25vw,14px); line-height:1.5;
+    /* Three states, each a step clearer than the last: a sector not reached
+       yet, one already banked, and the one running now. */
+    color:var(--ink-soft);
+  }
+  .splits .sp i{
+    font-style:normal; font-size:clamp(8.5px,.95vw,10px);
+    letter-spacing:.16em; text-transform:uppercase;
+    opacity:.8;                 /* the label recedes, the number does not */
+  }
+  .splits .sp b{ font-weight:400; min-width:3.6em; }
+  .splits .sp.set{ color:var(--ink-label); }
+  /* The sector you're in carries the eye — it's the only number changing. */
+  .splits .sp.now{ color:var(--ink); }
+  .splits .sp.now i{ opacity:1; }
+  .splits[hidden]{ display:none; }
+
+  /* result panel, shown once the lap is done */
+  .result{
+    /* top:50% together with bottom:0 stretched the box from the midpoint to
+       the floor of the stage, so it never matched its text. Centre it on both
+       axes instead and let the height come from the content. */
+    position:absolute; left:50%; top:50%;
+    transform:translate(-50%,-50%);
+    width:min(330px,86%);
+    max-height:90%; overflow-y:auto;
+    background:rgba(243,238,227,.96);
+    border:1px solid var(--ink);
+    padding:clamp(16px,2vw,24px);
+    text-align:center;
+  }
+  .result[hidden]{ display:none; }
+  .result h2{
+    font-size:clamp(10px,1.05vw,12px); font-weight:400; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--ink-soft); margin-bottom:10px;
+  }
+  .result .time{
+    font-size:clamp(30px,4vw,46px); font-variant-numeric:tabular-nums lining-nums;
+    line-height:1; margin-bottom:8px;
+  }
+  .result .sub{ font-size:clamp(11px,1.2vw,13px); font-style:italic; color:var(--ink-soft); }
+  .result .glyphs{
+    font-size:17px; letter-spacing:.22em; margin:14px 0 16px; color:var(--red);
+  }
+  .result .glyphs[hidden]{ display:none; }
+
+  /* consent card — deliberately not styled like a cookie banner */
+  .consent{ width:min(420px,92%); text-align:left; }
+  .consent h2{ text-align:left; }
+  .consent .c-body{
+    font-size:clamp(12px,1.25vw,13.5px); line-height:1.5;
+    color:var(--ink); margin-bottom:10px;
+  }
+  .consent .c-more{ border-top:1px solid var(--ink-faint); padding-top:10px; margin-top:4px; }
+  .consent .c-more[hidden]{ display:none; }
+  .consent button{ margin:6px 6px 0 0; }
+  .consent .c-primary{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .consent .c-fine{
+    font-size:clamp(10px,1.05vw,11.5px); line-height:1.5;
+    color:var(--ink-soft); margin-top:12px; font-style:italic;
+  }
+  .consent .c-fine a{ color:var(--ink-soft); }
+  .warn{
+    position:absolute; left:50%; top:8%; transform:translateX(-50%);
+    font-size:clamp(11px,1.3vw,14px); letter-spacing:.2em; text-transform:uppercase;
+    color:var(--red); background:rgba(243,238,227,.9);
+    border:1px solid var(--red); padding:6px 14px; white-space:nowrap;
+  }
+  .warn[hidden]{ display:none; }
+  /* Contact sits just below wrong-way so both can show at once, and fades
+     itself out — it's an event, not a state. */
+  .warn.flash{ top:calc(8% + 34px); animation:contactPop .5s ease forwards; }
+  /* Lap completion is good news, so it reads in ink rather than the red used
+     for contact and wrong-way. Sits in its own slot to avoid clashing. */
+  .warn.lapflash{
+    top:8%; color:var(--ink); border-color:var(--ink);
+    animation:contactPop 1s ease forwards;
+  }
+  @media (prefers-reduced-motion: reduce){
+    /* No fade and no scale — the banner simply appears, and JS hides it on a
+       timer. Zeroing the duration instead would snap it to the final keyframe,
+       which is opacity 0, so it would never be seen at all. */
+    .warn.flash, .warn.lapflash{ animation:none; opacity:1; }
+  }
+  @keyframes contactPop{
+    0%   { opacity:0; transform:translateX(-50%) scale(.9); }
+    18%  { opacity:1; transform:translateX(-50%) scale(1); }
+    70%  { opacity:1; }
+    100% { opacity:0; }
+  }
+  .rules{ width:min(400px,92%); text-align:left; padding:clamp(24px,3vw,34px); }
+  .rules h2{
+    text-align:left; font-size:clamp(9.5px,1vw,11px);
+    letter-spacing:.24em; margin-bottom:18px;
+  }
+  /* The rules card is read once, unhurried — loosen it well past the dense
+     consent-detail card it shares styles with. */
+  .rules .c-body{
+    font-size:clamp(11.5px,1.15vw,12.5px); line-height:1.7; margin-bottom:16px;
+  }
+  .rules .c-primary{ margin-top:8px; }
+  #rules-controls{ font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+  /* Icon buttons keep the footer's target size but drop the text metrics. */
+  .iconbtn{ display:grid; place-items:center; padding:4px 8px; }
+  .iconbtn svg{
+    width:17px; height:17px; display:block;
+    fill:none; stroke:currentColor; stroke-width:1.7;
+    stroke-linecap:round; stroke-linejoin:round;
+  }
+  .iconbtn .spk-body{ fill:currentColor; stroke:currentColor; stroke-width:1.2; }
+  /* The slash crosses the speaker rather than sitting beside it, which is the
+     only reading of "muted" people don't have to think about. A wider stroke
+     in the page colour goes underneath first, so the slash stays separate from
+     the shape it crosses instead of merging into it. */
+  .iconbtn .spk-cut{ stroke:var(--paper); stroke-width:3.4; }
+  .iconbtn .spk-slash{ stroke:currentColor; stroke-width:1.9; }
+  /* Off is the default, so the waves are hidden and the slash shown — the icon
+     reads correctly even before any script runs. */
+  .iconbtn .spk-wave{ display:none; }
+  .iconbtn.is-on .spk-wave{ display:inline; }
+  .iconbtn.is-on .spk-slash,
+  .iconbtn.is-on .spk-cut{ display:none; }
+  .iconbtn.is-unavailable{ opacity:.45; }
+
+  .researchlink{
+    border:none; letter-spacing:.14em;
+    /* AA target size is 24x24; this was ~10px tall */
+    min-height:24px; min-width:24px; padding:6px 10px;
+  }
+  .researchlink[hidden]{ display:none; }
+
+  /* Debug-only tuning panel. Deliberately plain — it is a workbench, not part
+     of the game, and it should never be mistaken for one. */
+  .tuner{
+    position:fixed; right:10px; top:10px; width:250px; max-height:94vh;
+    overflow:auto; background:rgba(243,238,227,.97);
+    border:1px solid var(--ink); padding:10px 12px; z-index:99;
+    font-size:11px; line-height:1.4;
+  }
+  .tuner h2{ font-size:10px; letter-spacing:.2em; margin-bottom:6px; }
+  .tuner .live{
+    font-variant-numeric:tabular-nums; color:var(--ink-label);
+    border-bottom:1px solid var(--ink-faint); padding-bottom:6px; margin-bottom:8px;
+  }
+  .tuner label{ display:grid; grid-template-columns:1fr 1fr auto; gap:6px;
+    align-items:center; margin-bottom:3px; }
+  .tuner label span{ font-size:9.5px; color:var(--ink-label); }
+  .tuner label b{ font-weight:400; font-variant-numeric:tabular-nums;
+    min-width:44px; text-align:right; }
+  .tuner input[type=range]{ width:100%; }
+  .tuner button{ width:100%; margin-top:8px; font-size:10px; padding:6px; }
+
+  /* Practice mode. The badge is always visible while practising so an
+     unofficial lap can never be mistaken for the day's attempt. */
+  #btn-practice{ margin-top:10px; }
+  .practice-note{
+    font-size:clamp(10px,1.05vw,11.5px); font-style:italic;
+    color:var(--ink-soft); margin-top:12px; line-height:1.5;
+  }
+  .practice-note[hidden]{ display:none; }
+  #btn-stats{ margin-top:8px; }
+
+  /* Session stats. A table, because that's what the data is — and the
+     numbers line up under each other, which is the whole point of splits. */
+  .stats{ width:min(430px,94%); text-align:left; }
+  .stats h2{ text-align:left; margin-bottom:12px; }
+  .stats-summary{
+    display:grid; grid-template-columns:repeat(2,1fr);
+    gap:8px 16px; margin-bottom:14px;
+    padding-bottom:12px; border-bottom:1px solid var(--ink-faint);
+  }
+  .stats-summary dt{
+    font-size:9.5px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--ink-label);
+  }
+  .stats-summary dd{
+    font-size:clamp(15px,1.7vw,19px); font-variant-numeric:tabular-nums lining-nums;
+    line-height:1.2;
+  }
+  /* Long sessions scroll rather than pushing the card off the screen. */
+  .stats-scroll{ max-height:min(42vh,300px); overflow-y:auto; margin:0 -2px; }
+  .stats-table{
+    width:100%; border-collapse:collapse;
+    font-variant-numeric:tabular-nums lining-nums;
+    font-size:clamp(11px,1.2vw,13px);
+  }
+  .stats-table th{
+    position:sticky; top:0; background:rgba(243,238,227,.97);
+    font-size:9px; letter-spacing:.14em; text-transform:uppercase;
+    font-weight:400; color:var(--ink-label); text-align:right;
+    padding:0 0 5px 8px; border-bottom:1px solid var(--ink-faint);
+  }
+  .stats-table th:first-child, .stats-table td:first-child{ text-align:left; padding-left:0; }
+  .stats-table td{
+    padding:4px 0 4px 8px; text-align:right;
+    border-bottom:1px solid rgba(34,36,42,.07); color:var(--ink-label);
+  }
+  .stats-table td.lap{ color:var(--ink); }
+  /* Your best lap, and each best individual sector. Marked with weight and a
+     rule rather than colour — the palette has one accent and it means
+     something else. */
+  .stats-table tr.best td{ color:var(--ink); }
+  .stats-table td.top{ color:var(--ink); box-shadow:inset 0 -1px 0 var(--ink); }
+  .stats-table td.hits{ color:var(--red); }
+  .stats-table tr.attempt td:first-child{ font-style:italic; }
+  .stats-table td.dnf{ font-style:italic; }
+  #stats-note{ margin-top:12px; }
+  #stats-close{ margin-top:10px; }
+  #btn-challenge{ margin-top:8px; }
+  #challenge .time{ margin-top:6px; }
+  #challenge .sub{ margin-bottom:12px; }
+  .badge{
+    position:absolute; left:0; top:0;
+    font-size:clamp(8.5px,.95vw,10px); letter-spacing:.2em;
+    text-transform:uppercase; color:var(--ink-soft);
+    border:1px solid var(--ink-faint); padding:5px 10px;
+    pointer-events:none;
+  }
+  .badge[hidden]{ display:none; }
+  .result .sub + button{ margin-top:14px; }
+  .result textarea{
+    width:100%; margin-top:12px; font-family:inherit; font-size:12px;
+    background:none; border:1px solid var(--ink-faint); color:var(--ink);
+    padding:8px; resize:none; text-align:center;
+  }
+  .result textarea[hidden]{ display:none; }
+
+  button{
+    font-family:inherit; font-size:clamp(9.5px,1vw,11px); letter-spacing:.16em;
+    text-transform:uppercase; color:var(--ink-soft); background:none;
+    border:1px solid var(--ink-faint); padding:8px 14px; cursor:pointer;
+  }
+  button:hover{ color:var(--ink); border-color:var(--ink); }
+  /* A border-colour swap alone is not a visible focus indicator — keyboard
+     users need something that reads at a glance against the paper. */
+  button:focus-visible, [tabindex]:focus-visible{
+    color:var(--ink); border-color:var(--ink);
+    outline:2px solid var(--ink); outline-offset:2px;
+  }
+  button[hidden]{ display:none; }
+  .result button{ color:var(--ink); border-color:var(--ink); }
+
+
+  /* ---- touch controls ---- */
+  /* Five columns: two buttons, a flexible divider, two buttons. Sizing the
+     buttons from the grid rather than from vw is what stops the row
+     overflowing on a narrow phone — they shrink instead of spilling. */
+  .pad{
+    display:none;
+    grid-template-columns:1fr 1fr minmax(10px,0.7fr) 1fr 1fr;
+    gap:clamp(10px,3vw,18px);
+    align-items:center;
+  }
+  .pad-group{ display:flex; gap:inherit; }
+  .pad-group:nth-of-type(1){ grid-column:1 / 3; }
+  .pad-group:nth-of-type(2){ grid-column:4 / 6; }
+  .key{
+    /* Well past the 24px accessibility floor — these are driven with a thumb
+       at speed, not tapped carefully. Flexible so the row always fits. */
+    flex:1 1 0; min-width:52px;
+    /* Capped by height as well as width. On a short phone an 84px button plus
+       the header, the links and the gaps leaves the circuit nothing. */
+    max-width:min(84px, 12dvh);
+    aspect-ratio:1; border-radius:50%;
+    padding:0; letter-spacing:0; text-transform:none;
+    color:var(--ink); border:1px solid var(--ink); background:none;
+    display:grid; place-items:center;
+    touch-action:none; user-select:none; -webkit-user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  /* Drawn as strokes rather than the geometric-shape characters, which render
+     as filled blobs on some platforms and as emoji on others. currentColor so
+     they invert with the button when it's held. */
+  .key svg{
+    width:46%; height:46%; display:block;
+    fill:none; stroke:currentColor; stroke-width:2.1;
+    stroke-linecap:round; stroke-linejoin:round;
+    vector-effect:non-scaling-stroke;
+  }
+  .key.is-down{ background:var(--ink); color:var(--paper); }
+
+  /* Phones, in either orientation. This used to key off max-width:620px,
+     which a phone held sideways never matches — it is around 850px wide —
+     so landscape kept the desktop padding, the 16/10 aspect ratio and no
+     safe-area insets, and the circuit was pushed off the screen. */
+  @media (max-width:620px), (pointer:coarse){
+    body{
+      align-items:stretch;
+      /* keep clear of the notch and the home indicator */
+      padding:
+        calc(8px + env(safe-area-inset-top))
+        calc(8px + env(safe-area-inset-right))
+        calc(8px + env(safe-area-inset-bottom))
+        calc(8px + env(safe-area-inset-left));
+    }
+    .card{
+      aspect-ratio:auto;
+      height:100%;
+      max-height:none;          /* the body's own height is the limit now */
+      min-height:0;
+    }
+    /* Without this a grid row refuses to shrink below its content, and the
+       stage is what gets pushed out. */
+    .card > *{ min-height:0; }
+  }
+  /* ------------------------------------------------------------------
+     Phone held upright. The stage reserves a band across the top; this puts
+     everything that would otherwise sit on the circuit into it. Stacked
+     vertically the clock, splits and contacts run to roughly 210px, which no
+     reasonable band could hold — laid out in a row they come to about 50px,
+     and there is width to spare in portrait.
+     ------------------------------------------------------------------ */
+  @media (pointer:coarse) and (orientation:portrait){
+    .readout{ left:0; right:0; text-align:center; }
+    .readout dl{
+      display:grid; grid-auto-flow:column; grid-template-rows:auto auto;
+      justify-content:center; align-items:baseline;
+      gap:1px clamp(8px,3vw,14px);
+    }
+    /* Sized so the widest case — time, last, best, gap and contacts all at
+       once during a practice lap with a ghost — still fits one row. */
+    .readout dd{
+      font-size:clamp(13px,3.6vw,17px); margin-bottom:0;
+      color:var(--ink);           /* full strength; it's the whole point */
+    }
+    .readout dt{
+      font-size:clamp(7.5px,2.1vw,9px); color:var(--ink-label);
+      letter-spacing:.14em;       /* less tracking survives better when tiny */
+    }
+    .splits{
+      display:flex; justify-content:center; margin-top:2px;
+      gap:clamp(7px,2.6vw,14px);
+    }
+    .splits .sp{ gap:4px; font-size:clamp(10px,2.7vw,12px); }
+    .splits .sp i{ font-size:clamp(7.5px,2vw,9px); letter-spacing:.1em; }
+    .splits .sp b{ min-width:0; }
+
+    /* The badge shares the band with the readout, so it stays small and out
+       of the way — it only has to be legible enough to remind you the lap
+       doesn't count. */
+    .badge{
+      font-size:clamp(7px,2vw,8.5px); letter-spacing:.16em;
+      padding:3px 7px; border-color:rgba(34,36,42,.14);
+    }
+  }
+
+  /* only show the pad where there's no keyboard to speak of */
+  @media (pointer:coarse){
+    .pad{ display:grid; }
+    /* One line, always. Three of these are visible at once during practice,
+       and wrapping to a second row costs the circuit the height it needs. */
+    .foot{
+      flex-wrap:nowrap; justify-content:center; gap:0 6px;
+      overflow:hidden;
+    }
+    .foot .researchlink{
+      padding:5px 7px; font-size:clamp(8.5px,2.4vw,10px);
+      letter-spacing:.1em; white-space:nowrap;
+      min-width:0; flex:0 1 auto; overflow:hidden; text-overflow:ellipsis;
+    }
+
+    /* ------------------------------------------------------------------
+       Phone held sideways. Height is the scarce resource here — the track
+       is 1.72:1 but the screen is nearer 2.2:1, so fitting the circuit
+       leaves a wide band of empty space down each side. Putting the
+       controls in that band costs the track nothing, where a row beneath
+       it was taking a third of the available height.
+
+       Steering goes left and the pedals right, which is where thumbs
+       already rest when a phone is held in two hands.
+       ------------------------------------------------------------------ */
+    @media (orientation:landscape) and (max-height:560px){
+      .card{
+        /* minmax(44%,1fr) is the important part: the circuit keeps at least
+           44% of the width however large the controls would like to be. */
+        grid-template-columns:auto minmax(44%,1fr) auto;
+        grid-template-rows:auto minmax(0,1fr) auto;
+        grid-template-areas:
+          "head  head   head"
+          "padL  stage  padR"
+          "foot  foot   foot";
+        gap:clamp(6px,1.4vh,12px) clamp(10px,1.6vw,18px);
+        padding:clamp(8px,1.6vh,16px) clamp(12px,1.6vw,22px);
+      }
+      .card > .row:first-of-type{ grid-area:head; }
+      .stage{ grid-area:stage; }
+      .foot{ grid-area:foot; }
+
+      /* the two groups leave the pad and take their own side of the stage */
+      .pad{ display:contents; }
+      .pad-group:nth-of-type(1){ grid-area:padL; }
+      .pad-group:nth-of-type(2){ grid-area:padR; }
+      .pad-group{
+        display:flex; align-self:end; gap:clamp(8px,1.4vh,14px);
+        padding-bottom:clamp(2px,1vh,10px);
+      }
+      /* pedals stack: one thumb, two functions, no horizontal room to spare */
+      .pad-group:nth-of-type(2){ flex-direction:column-reverse; }
+      .key{
+        flex:0 0 auto;
+        width:clamp(44px, 14dvh, 64px); max-width:none; min-width:0;
+      }
+      /* every pixel of height counts */
+      .wordmark em{ display:none; }
+      .wordmark{ font-size:13px; }
+      .daynum{ font-size:11px; }
+      .foot{ gap:4px 12px; }
+      .researchlink{ padding:4px 8px; min-height:0; font-size:9.5px; }
+    }
+    /* No text within thumb range of the pad — a stray press-and-hold on a
+       caption pops the selection handles mid-lap. */
+    .card{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+    .result textarea{ -webkit-user-select:text; user-select:text; }
+  }
+</style>
+</head>
+<body>
+
+<main class="card" id="card">
+  <div class="row">
+    <h1 class="wordmark">Ink Circuit<em> — one lap a day</em></h1>
+    <p class="daynum" id="daynum">Day —</p>
+  </div>
+
+  <section class="stage" id="stage"
+           aria-label="Today's circuit. Drive one lap with the arrow keys.">
+    <!-- The canvases are a visual rendering of state that is also exposed as
+         text in the readout and announced through #sr-status, so they are
+         hidden from assistive tech rather than described three times over. -->
+    <canvas id="c-track" aria-hidden="true"></canvas>
+    <canvas id="c-ink" aria-hidden="true"></canvas>
+    <canvas id="c-car" aria-hidden="true"></canvas>
+
+    <!-- Announcements. The clock changes every frame, so it is NOT live —
+         instead this region carries the discrete events worth hearing. -->
+    <p id="sr-status" class="sr-only" role="status" aria-live="polite"></p>
+
+    <div class="readout">
+      <dl>
+        <dt>Time</dt>     <dd id="r-time">0:00.00</dd>
+        <dt id="r-target-l" hidden>Target</dt><dd id="r-target" hidden>—</dd>
+        <dt id="r-gap-l" hidden>Gap</dt><dd id="r-gap" hidden>—</dd>
+        <dt id="r-last-l" hidden>Last</dt><dd id="r-last" hidden>—</dd>
+        <dt id="r-best-l" hidden>Best</dt><dd id="r-best" hidden>—</dd>
+        <dt>Contact</dt>  <dd id="r-hits" class="hit">0</dd>
+      </dl>
+      <div class="splits" id="r-splits" hidden>
+        <p class="sp" id="sp-1"><i>S1</i><b>&middot;</b></p>
+        <p class="sp" id="sp-2"><i>S2</i><b>&middot;</b></p>
+        <p class="sp" id="sp-3"><i>S3</i><b>&middot;</b></p>
+      </div>
+    </div>
+
+    <p class="prompt" id="prompt">Press an arrow key to start — ↑ ↓ ← →</p>
+    <p class="warn" id="warn" hidden>Wrong way</p>
+    <p class="badge" id="badge" hidden>Practice &middot; unofficial</p>
+    <p class="warn flash" id="contact" hidden>Contact</p>
+    <p class="warn flash lapflash" id="lapflash" hidden>Lap</p>
+
+    <div class="result rules" id="rules" hidden>
+      <h2>One lap a day</h2>
+      <p class="c-body">You get <strong>one attempt</strong> at today's circuit.
+        The clock starts the moment you touch a control, and stops when you cross
+        the finish line.</p>
+      <p class="c-body" id="rules-controls">&uarr; or W accelerate &middot; &darr; or S brake
+        and reverse &middot; &larr; &rarr; or A D steer</p>
+      <p class="c-body">The walls are solid. Hitting one costs you time and shows up
+        on your result.</p>
+      <button id="rules-go" class="c-primary">Let's Race</button>
+      <p class="c-fine">Space or Enter to start.</p>
+    </div>
+
+    <div class="result consent" id="consent" hidden>
+      <h2>Before you drive</h2>
+      <p class="c-body">Ink Circuit is part of a small research project comparing how
+        people and machine-learning agents learn to drive circuits they've never seen.</p>
+      <p class="c-body">Your lap gets saved either way — that's how one attempt a day
+        works. The question is whether we may also use it for research.</p>
+      <p class="c-body">If you say yes, we keep the circuit number, your lap time, how
+        many walls you touched, and a recording of the arrow keys you pressed. No name,
+        no email, no account — just a random ID kept in this browser.
+        This covers your practice laps too, not just the one that counts.</p>
+      <div class="c-more" id="c-more" hidden>
+        <p class="c-body"><strong>We never keep</strong> anything that identifies you.
+          Findings are reported in aggregate, and we may publish the anonymised dataset
+          under random IDs.</p>
+        <p class="c-body"><strong>Changing your mind</strong> deletes the laps already
+          collected. One limitation: your ID lives in this browser, so if you clear your
+          browser data we can't find those laps to delete them.</p>
+        <p class="c-body">Questions: <span id="c-contact">[your email]</span></p>
+      </div>
+      <button id="c-yes" class="c-primary">Use my laps for research</button>
+      <button id="c-no">Just let me play</button>
+      <p class="c-fine">You need to be 18 or over to take part.
+        Saying no changes nothing about the game.
+        <a href="#" id="c-toggle">What this means in full</a></p>
+    </div>
+
+    <div class="result rules" id="challenge" hidden>
+      <h2>You&rsquo;ve been challenged</h2>
+      <p class="time" id="ch-time">0:00.00</p>
+      <p class="sub" id="ch-sub"></p>
+      <p class="c-body" id="ch-body"></p>
+      <button id="ch-go" class="c-primary">Take it on</button>
+    </div>
+
+    <div class="result stats" id="stats" hidden>
+      <h2>This session</h2>
+      <dl class="stats-summary" id="stats-summary"></dl>
+      <div class="stats-scroll">
+        <table class="stats-table">
+          <thead>
+            <tr><th scope="col">Lap</th><th scope="col">Time</th>
+                <th scope="col">S1</th><th scope="col">S2</th><th scope="col">S3</th>
+                <th scope="col" class="num">&#10007;</th></tr>
+          </thead>
+          <tbody id="stats-rows"></tbody>
+        </table>
+      </div>
+      <p class="c-fine" id="stats-note"></p>
+      <button id="stats-close" class="c-primary">Back</button>
+    </div>
+
+    <div class="result" id="result" hidden>
+      <h2 id="res-head">Lap complete</h2>
+      <p class="time" id="res-time">0:00.00</p>
+      <p class="sub" id="res-sub">clean lap</p>
+      <p class="glyphs" id="res-glyphs"></p>
+      <button id="btn-share">Share result</button>
+      <button id="btn-challenge">Challenge a friend</button>
+      <button id="btn-practice">Practice this track</button>
+      <button id="btn-stats" hidden>Session stats</button>
+      <p class="practice-note" id="practice-note" hidden></p>
+      <textarea id="res-text" rows="4" readonly hidden></textarea>
+    </div>
+  </section>
+
+  <div class="row foot">
+    <button id="btn-back" class="researchlink" hidden>Results</button>
+    <button id="btn-restart" class="researchlink" hidden>Restart</button>
+    <button id="btn-ghost" class="researchlink" hidden>Ghost: off</button>
+    <button id="btn-sound" class="researchlink iconbtn" aria-pressed="false"
+            aria-label="Sound off"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="spk-body" d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path class="spk-wave" d="M15.5 9.2a4 4 0 0 1 0 5.6"/><path class="spk-wave" d="M18 6.8a7.5 7.5 0 0 1 0 10.4"/><path class="spk-cut" d="M3.5 3.5L20.5 20.5"/><path class="spk-slash" d="M3.5 3.5L20.5 20.5"/></svg></button>
+    <button id="btn-retire" class="researchlink" hidden>Retire</button>
+    <button id="btn-research" class="researchlink" hidden>Research: off</button>
+    <button id="btn-reset" class="researchlink" hidden>Reset</button>
+
+  </div>
+
+  <div class="pad" id="pad">
+    <div class="pad-group">
+      <button class="key" data-key="ArrowLeft" aria-label="Steer left"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15.5 4.5 L8 12 L15.5 19.5"/></svg></button>
+      <button class="key" data-key="ArrowRight" aria-label="Steer right"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 4.5 L16 12 L8.5 19.5"/></svg></button>
+    </div>
+    <div class="pad-group">
+      <button class="key" data-key="ArrowDown" aria-label="Brake"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 8.5 L12 16 L19.5 8.5"/></svg></button>
+      <button class="key" data-key="ArrowUp" aria-label="Accelerate"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 15.5 L12 8 L19.5 15.5"/></svg></button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+/* Error reporting. Deliberately in a plain script ahead of the module, so a
+   syntax error in the module itself still gets reported rather than dying
+   silently. Sends to /api/error, which writes to the server log.
+
+   Capped hard: a render loop that throws would otherwise fire sixty times a
+   second and turn a bug into an outage. */
+(function () {
+  var BUILD = 'sim7-2026-08';
+  var sent = 0, MAX_PER_SESSION = 5;
+  var seen = Object.create(null);
+
+  function report(kind, message, stack, url, line, col) {
+    if (sent >= MAX_PER_SESSION) return;
+    var key = kind + '|' + message + '|' + line + ':' + col;
+    if (seen[key]) return;              // the same fault, over and over
+    seen[key] = true;
+    sent++;
+    try {
+      var body = JSON.stringify({
+        kind: kind, message: String(message || ''),
+        stack: stack ? String(stack) : undefined,
+        url: url ? String(url) : location.pathname,
+        line: line, col: col, build: BUILD,
+        viewport: innerWidth + 'x' + innerHeight,
+        input: matchMedia('(pointer:coarse)').matches ? 'touch' : 'pointer'
+      });
+      /* sendBeacon survives the page being torn down, which is exactly when
+         a fatal error tends to happen. fetch is the fallback. */
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/error', new Blob([body], { type: 'application/json' }));
+      } else {
+        fetch('/api/error', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                              body: body, keepalive: true }).catch(function () {});
+      }
+    } catch (e) { /* reporting must never itself break the page */ }
+  }
+
+  addEventListener('error', function (e) {
+    report('error', e.message, e.error && e.error.stack, e.filename, e.lineno, e.colno);
+  });
+  addEventListener('unhandledrejection', function (e) {
+    var r = e.reason;
+    report('unhandledrejection', r && r.message ? r.message : String(r), r && r.stack);
+  });
+
+  window.__reportError = report;      // so the module can report its own faults
+})();
+</script>
+
+<script>
+/* ---- inlined from sim.js ---- */
+/* ============================================================================
+   sim.js — the canonical Ink Circuit simulation.
+
+   Imported by the page, by the API, and by anything that needs to reproduce a
+   lap. There is exactly one copy of the physics and one copy of the track
+   generator. Nothing in here touches the DOM, canvas, storage or the clock.
+
+   Two rules keep it honest:
+     1. The sim advances only in whole FIXED ticks. It never sees wall time.
+     2. A lap is fully described by (day, input stream). Given those two, the
+        time and the contact count are recomputable anywhere.
+
+   Bump SIM_VERSION whenever anything below changes the outcome of a lap.
+   Stored results carry it so old times are never silently compared to new.
+   ========================================================================= */
+
+/* Version 7/8: sector splits fire on a strict centreline crossing rather than
+   a proximity band, so a recorded split matches the drawn gate exactly. This
+   changes lap times, so both encodings bump together — streams from earlier
+   versions are rejected rather than silently mis-timed.
+
+   Two numbers because the input encoding is an independent axis: the same
+   physics can be driven by discrete keys or by analog values. */
+const SIM_VERSION_DISCRETE = 7;   // one nibble per tick
+const SIM_VERSION_ANALOG   = 8;   // 16-bit word per tick
+
+/* Rollback flag. When false the sim takes discrete input and stamps laps with
+   SIM_VERSION_DISCRETE. Every analog addition is gated on this — flipping it
+   doesn't just hide the path, it takes it out of the loop entirely. */
+const SIM_ANALOG = false;
+const ACTIVE_VERSION = SIM_ANALOG ? SIM_VERSION_ANALOG : SIM_VERSION_DISCRETE;
+
+/* Aliases, so existing imports keep working. */
+const SIM_VERSION = SIM_VERSION_ANALOG;
+const SIM_VERSION_LEGACY = SIM_VERSION_DISCRETE;
+
+/* ---- world ---- */
+const DW = 1000, DH = 580;   // design space
+const HALF_W = 55;           // half the track width
+const FIXED = 1 / 60;        // seconds per tick
+
+/* ---- car ---- */
+const MAX_SPD = 330;
+const ACCEL   = 260;
+const BRAKE   = 430;
+const TURN    = 2.9;
+const GRIP    = 0.02;
+const CAR_L   = 20, CAR_W = 13;
+const BOUNCE  = 0.12;
+
+/* ---- rules ---- */
+/* Three sectors, as on a real circuit: the start/finish line plus two
+   intermediate splits at a third and two thirds of the way round. The splits
+   double as the anti-shortcut checkpoints — they must be taken in order. */
+const SECTORS       = 3;
+const HIT_IMPACT    = 35;    // below this, contact isn't counted
+const HIT_DEBOUNCE  = 24;    // ticks; 0.4s of scraping is one contact
+const GRID_BACK_UNITS = 72;
+const GRID_SIDE     = -16;
+const CHECKPOINTS   = [1/3, 2/3];
+
+/* A run has to be able to end. Without a cap, a player who drives the wrong
+   way or simply stops is stuck forever: no result, no share, and the day never
+   resolves. Two minutes is far beyond any real lap. */
+const MAX_LAP_TICKS = 60 * 120;
+
+/* Sustained backward progress, in centre-line samples, before we say so.
+   Forward progress pays it down at double rate so a wobble never trips it. */
+const WRONG_WAY_SAMPLES = 10;
+
+/* ---- v5 input encoding: one nibble per tick, kept for rollback ---- */
+const IN_UP = 1, IN_DOWN = 2, IN_LEFT = 4, IN_RIGHT = 8;
+
+/* ---- v6 analog encoding, 16 bits per tick ----
+   bits  0..2  throttle   0..7  (0 = none, 7 = full)
+   bits  3..5  brake      0..7
+   bits  6..9  steer      -7..+7 signed, stored as 4-bit two's complement
+   bits 10..15 reserved for future per-tick flags without a version bump */
+const STEER_LEVELS    = 7;   // 0..7 in each direction, so 15 total incl. zero
+const THROTTLE_LEVELS = 7;
+const BRAKE_LEVELS    = 7;
+
+/* Keyboard ramp — a held key reaches full throw in this many ticks. Below
+   this the player emits a partial value, matching what a touch driver can do
+   with a gentle wheel tilt. Roughly 150ms at 60Hz. */
+const KEY_RAMP_TICKS = 9;
+
+/** Build a v6 packed input word from analog components in [-1..1] or [0..1]. */
+function analogInput(throttle, brake, steer){
+  const t = Math.round(Math.max(0, Math.min(1, throttle)) * THROTTLE_LEVELS);
+  const b = Math.round(Math.max(0, Math.min(1, brake))    * BRAKE_LEVELS);
+  const s = Math.round(Math.max(-1, Math.min(1, steer))   * STEER_LEVELS);
+  const sMasked = s & 0x0F;   // 4-bit two's complement window
+  return (t & 0x07) | ((b & 0x07) << 3) | (sMasked << 6);
+}
+
+/** Decode a v6 word back to floats. */
+function decodeAnalog(word){
+  const t = word & 0x07;
+  const b = (word >> 3) & 0x07;
+  let s = (word >> 6) & 0x0F;
+  if (s & 0x08) s |= ~0x0F;   // sign-extend 4-bit
+  return {
+    throttle: t / THROTTLE_LEVELS,
+    brake:    b / BRAKE_LEVELS,
+    steer:    s / STEER_LEVELS
+  };
+}
+
+/** Decode a v5 nibble to the same shape, so step() can be encoding-agnostic. */
+function decodeLegacy(nibble){
+  return {
+    throttle: (nibble & IN_UP)    ? 1 : 0,
+    brake:    (nibble & IN_DOWN)  ? 1 : 0,
+    steer:    ((nibble & IN_RIGHT) ? 1 : 0) - ((nibble & IN_LEFT) ? 1 : 0)
+  };
+}
+
+/* ============================================================================
+   Geometry
+   ========================================================================= */
+const dist = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
+
+function mixp(a, b, ta, tb, t){
+  const d = (tb - ta) || 1e-6, u = (tb - t) / d, v = (t - ta) / d;
+  return [a[0]*u + b[0]*v, a[1]*u + b[1]*v];
+}
+
+/* Centripetal Catmull-Rom: passes through every point, never cusps. */
+function catmullRom(pts, steps = 18, alpha = 0.5){
+  const out = [], n = pts.length;
+  for (let i = 0; i < n; i++){
+    const p0 = pts[(i-1+n)%n], p1 = pts[i], p2 = pts[(i+1)%n], p3 = pts[(i+2)%n];
+    const t0 = 0,
+          t1 = t0 + Math.pow(dist(p0,p1), alpha) || 1e-4,
+          t2 = t1 + Math.pow(dist(p1,p2), alpha) || 1e-4,
+          t3 = t2 + Math.pow(dist(p2,p3), alpha) || 1e-4;
+    for (let s = 0; s < steps; s++){
+      const t  = t1 + (t2-t1)*(s/steps);
+      const A1 = mixp(p0,p1,t0,t1,t), A2 = mixp(p1,p2,t1,t2,t), A3 = mixp(p2,p3,t2,t3,t);
+      const B1 = mixp(A1,A2,t0,t2,t), B2 = mixp(A2,A3,t1,t3,t);
+      out.push(mixp(B1,B2,t1,t2,t));
+    }
+  }
+  return out;
+}
+
+function tangents(P){
+  const n = P.length;
+  return P.map((_, i) => {
+    const a = P[(i-1+n)%n], b = P[(i+1)%n];
+    const tx = b[0]-a[0], ty = b[1]-a[1], l = Math.hypot(tx,ty) || 1;
+    return [tx/l, ty/l];
+  });
+}
+
+function resample(P, count){
+  const n = P.length, cum = [0];
+  for (let i = 0; i < n; i++) cum.push(cum[i] + dist(P[i], P[(i+1)%n]));
+  const total = cum[n], out = [];
+  let j = 0;
+  for (let i = 0; i < count; i++){
+    const d = total*i/count;
+    while (j < n && cum[j+1] < d) j++;
+    const t = (d - cum[j]) / ((cum[j+1]-cum[j]) || 1e-6);
+    const a = P[j], b = P[(j+1)%n];
+    out.push([a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t]);
+  }
+  return out;
+}
+
+/* How much room is left before an offset edge doubles back on itself. This,
+   not corner radius, is the real ceiling on how wide a track can be. */
+function foldPerSample(P, w){
+  const n = P.length, T = tangents(P), out = new Array(n).fill(Infinity);
+  for (const side of [1, -1]){
+    const E = P.map((p, i) => [p[0] - T[i][1]*side*w, p[1] + T[i][0]*side*w]);
+    for (let i = 0; i < n; i++){
+      const a = E[i], b = E[(i+1)%n];
+      const adv = (b[0]-a[0])*T[i][0] + (b[1]-a[1])*T[i][1];
+      const r = adv / (dist(P[i], P[(i+1)%n]) || 1e-6);
+      out[i] = Math.min(out[i], r);
+      out[(i+1)%n] = Math.min(out[(i+1)%n], r);
+    }
+  }
+  return out;
+}
+const foldWorst = (P, w) => Math.min(...foldPerSample(P, w));
+
+/* ============================================================================
+   Track generation — deterministic in the day number alone
+   ========================================================================= */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a>>>15, 1|a);
+    t = t + Math.imul(t ^ t>>>7, 61|t) ^ t;
+    return ((t ^ t>>>14) >>> 0) / 4294967296;
+  };
+}
+
+function hull(pts){
+  const p = pts.slice().sort((a,b) => a[0]-b[0] || a[1]-b[1]);
+  const cross = (o,a,b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
+  const lo = [], up = [];
+  for (const q of p){ while (lo.length>=2 && cross(lo[lo.length-2],lo[lo.length-1],q)<=0) lo.pop(); lo.push(q); }
+  for (let i=p.length-1;i>=0;i--){ const q=p[i]; while (up.length>=2 && cross(up[up.length-2],up[up.length-1],q)<=0) up.pop(); up.push(q); }
+  lo.pop(); up.pop();
+  return lo.concat(up);
+}
+
+function separate(pts, minD, iters = 80){
+  const n = pts.length;
+  for (let it = 0; it < iters; it++){
+    let moved = false;
+    for (let i = 0; i < n; i++) for (let j = i+1; j < n; j++){
+      const d = dist(pts[i], pts[j]);
+      if (d < minD && d > 1e-6){
+        const push = (minD-d)/2, dx = (pts[j][0]-pts[i][0])/d, dy = (pts[j][1]-pts[i][1])/d;
+        pts[i][0] -= dx*push; pts[i][1] -= dy*push;
+        pts[j][0] += dx*push; pts[j][1] += dy*push;
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+  return pts;
+}
+
+/* Long hull edges stay as straights; displaced midpoints become corners. */
+function addCorners(pts, rnd, amount){
+  const out = [], n = pts.length;
+  for (let i = 0; i < n; i++){
+    const a = pts[i], b = pts[(i+1)%n];
+    out.push(a);
+    const len = dist(a,b);
+    if (len < 150) continue;
+    const dx = (b[0]-a[0])/len, dy = (b[1]-a[1])/len;
+    const disp = (rnd()*2-1) * amount * Math.min(1, len/300);
+    out.push([(a[0]+b[0])/2 - dy*disp, (a[1]+b[1])/2 + dx*disp]);
+  }
+  return out;
+}
+
+function fixAngles(pts, minAngle, iters = 140){
+  const n = pts.length;
+  for (let it = 0; it < iters; it++){
+    let bad = false;
+    for (let i = 0; i < n; i++){
+      const prev = pts[(i-1+n)%n], cur = pts[i], next = pts[(i+1)%n];
+      let v1x = prev[0]-cur[0], v1y = prev[1]-cur[1];
+      let v2x = next[0]-cur[0], v2y = next[1]-cur[1];
+      const l1 = Math.hypot(v1x,v1y)||1, l2 = Math.hypot(v2x,v2y)||1;
+      v1x/=l1; v1y/=l1; v2x/=l2; v2y/=l2;
+      const ang = Math.acos(Math.max(-1, Math.min(1, v1x*v2x + v1y*v2y)));
+      if (ang >= minAngle) continue;
+      bad = true;
+      const need = (minAngle-ang)*0.5;
+      const sign = (v1x*v2y - v1y*v2x) > 0 ? -1 : 1;
+      const c = Math.cos(need*sign), s = Math.sin(need*sign);
+      pts[(i+1)%n] = [cur[0] + (v2x*c - v2y*s)*l2, cur[1] + (v2x*s + v2y*c)*l2];
+    }
+    if (!bad) return true;
+  }
+  return false;
+}
+
+/* Relax only the corners too tight for the width. Straights survive. */
+function relaxCorners(P, w, target = 0.30, iters = 600){
+  const n = P.length;
+  for (let it = 0; it < iters; it++){
+    const f = foldPerSample(P, w);
+    if (Math.min(...f) >= target) return true;
+    const Q = P.map(p => p.slice());
+    for (let i = 0; i < n; i++){
+      if (f[i] >= target) continue;
+      const a = 0.22 * Math.min(1, (target-f[i])/target);
+      const m1 = P[(i-5+n)%n], m2 = P[(i+5)%n];
+      Q[i][0] = P[i][0]*(1-a) + ((m1[0]+m2[0])/2)*a;
+      Q[i][1] = P[i][1]*(1-a) + ((m1[1]+m2[1])/2)*a;
+    }
+    for (let i = 0; i < n; i++){
+      const near = f[i] < target || f[(i-1+n)%n] < target || f[(i+1)%n] < target;
+      if (!near){ P[i] = Q[i]; continue; }
+      const m1 = Q[(i-1+n)%n], m2 = Q[(i+1)%n], b = 0.16;
+      P[i] = [Q[i][0]*(1-b) + ((m1[0]+m2[0])/2)*b, Q[i][1]*(1-b) + ((m1[1]+m2[1])/2)*b];
+    }
+  }
+  return Math.min(...foldPerSample(P, w)) >= target;
+}
+
+function attempt(seed, w){
+  const rnd = mulberry32(seed);
+  const padX = w+26, padY = w+22;
+  const scatter = [];
+  for (let i = 0; i < 16; i++) scatter.push([padX + rnd()*(DW-2*padX), padY + rnd()*(DH-2*padY)]);
+  let pts = hull(scatter);
+  if (pts.length < 6) return null;
+  separate(pts, 2.4*w);
+  pts = addCorners(pts, rnd, w*1.5);
+  separate(pts, 2.15*w, 40);
+  if (!fixAngles(pts, Math.PI*0.52)) return null;
+  separate(pts, 2.05*w, 30);
+  for (const p of pts){
+    p[0] = Math.max(padX, Math.min(DW-padX, p[0]));
+    p[1] = Math.max(padY, Math.min(DH-padY, p[1]));
+  }
+  if (pts.length < 7 || pts.length > 14) return null;
+
+  let P = resample(catmullRom(pts), 360);
+  if (foldWorst(P, w) < 0.30 && !relaxCorners(P, w)) return null;
+  P = resample(P, 360);
+  const n = P.length;
+
+  let gap = Infinity;
+  for (let i = 0; i < n; i += 2) for (let j = i+2; j < n; j += 2){
+    const sep = Math.min(j-i, n-(j-i));
+    if (sep < 44) continue;
+    const d = dist(P[i], P[j]);
+    if (d < gap) gap = d;
+  }
+  if (gap < 2*w + 22) return null;
+
+  let page = Infinity;
+  for (const p of P) page = Math.min(page, p[0], DW-p[0], p[1], DH-p[1]);
+  if (page < w+4) return null;
+
+  let len = 0;
+  for (let i = 0; i < n; i++) len += dist(P[i], P[(i+1)%n]);
+  if (len < 1700 || len > 2900) return null;
+
+  const T = tangents(P);
+  let straight = 0;
+  for (let i = 0; i < n; i++){
+    const a = T[i], b = T[(i+6)%n];
+    if (Math.acos(Math.max(-1, Math.min(1, a[0]*b[0] + a[1]*b[1]))) < 0.10) straight++;
+  }
+  if (straight/n < 0.22) return null;
+
+  return P;
+}
+
+/* Start line goes on the longest straight, rotated to index 0. */
+function rotateToStraight(P){
+  const n = P.length, T = tangents(P);
+  let bestI = 0, bestTurn = Infinity;
+  for (let i = 0; i < n; i++){
+    let turn = 0;
+    for (let k = -9; k < 9; k++){
+      const a = T[(i+k+n)%n], b = T[(i+k+1+n)%n];
+      turn += Math.abs(Math.acos(Math.max(-1, Math.min(1, a[0]*b[0] + a[1]*b[1]))));
+    }
+    if (turn < bestTurn){ bestTurn = turn; bestI = i; }
+  }
+  return P.slice(bestI).concat(P.slice(0, bestI));
+}
+
+const trackCache = new Map();
+
+/* Everything downstream — physics, rendering, checkpoints — reads geometry
+   from this bundle rather than from the module constants, so a track can come
+   from the generator, from a real circuit's control points, or from a test
+   fixture and behave identically. */
+function assembleTrack(path, meta){
+  const n = path.length;
+  const T = tangents(path);
+  const normals = T.map(t => [-t[1], t[0]]);
+  let length = 0;
+  for (let i = 0; i < n; i++) length += dist(path[i], path[(i+1)%n]);
+  const spacing = length / n;
+
+  return {
+    path, normals, tangents: T, length, spacing, n,
+    /* Half the track width, in design units. Per-track rather than global:
+       imported circuits need their own, and varying it deliberately is the
+       track-width experiment. */
+    halfWidth: meta.halfWidth === undefined ? HALF_W : meta.halfWidth,
+    /* Where the track came from. `generated` circuits are novel to everyone,
+       which is what the research design depends on; anything else is not. */
+    source: meta.source || 'generated',
+    name: meta.name || null,
+    day: meta.day === undefined ? null : meta.day,
+    gridIndex: (n - Math.max(8, Math.round(GRID_BACK_UNITS/spacing)) + n) % n,
+    checkpoints: CHECKPOINTS.map(f => Math.floor(n*f))
+  };
+}
+
+/** The circuit for a given day. Same day, same track, anywhere. */
+function buildTrack(day){
+  if (trackCache.has(day)) return trackCache.get(day);
+  let path = null;
+  for (let k = 0; k < 800 && !path; k++){
+    const P = attempt(day*7919 + k*104729 + 13, HALF_W);
+    if (P) path = rotateToStraight(P);
+  }
+  if (!path) throw new Error('no valid track for day ' + day);
+
+  const track = assembleTrack(path, { day, source: 'generated' });
+  trackCache.set(day, track);
+  return track;
+}
+
+/* ============================================================================
+   Importing a real circuit
+
+   A real circuit arrives as a handful of control points traced from a map.
+   Two things make it usable:
+
+   1. It is resampled through the same Catmull-Rom path the generator uses, so
+      nothing downstream can tell an imported track from a generated one.
+
+   2. It is normalised to fill the design space. Faithful scaling is not an
+      option — a real circuit is roughly 1:280 to 1:540 in width-to-length,
+      against this game's 1:18, so a true-to-scale import would be a hairline
+      nobody could drive. Imported tracks are therefore caricatures: the corner
+      sequence and shape are real, the proportions are not.
+   ========================================================================= */
+
+/** Resample a closed loop of control points to `count` evenly spaced samples. */
+function resampleLoop(points, count){
+  const m = points.length;
+  if (m < 4) throw new Error('need at least 4 control points');
+
+  /* Centripetal Catmull-Rom (alpha = 0.5) rather than the uniform form.
+     Uniform splines overshoot where control points bunch up, which on a
+     traced circuit means the spline invents corners tighter than the real
+     ones — Zandvoort's Tarzan hairpin came out at 60% of its true radius.
+     Centripetal parameterisation is the standard fix and cannot cusp or
+     self-intersect between points. */
+  const ALPHA = 0.5;
+  const knot = (ti, a, b) => {
+    const d = Math.hypot(b[0]-a[0], b[1]-a[1]);
+    return ti + (d < 1e-9 ? 1e-9 : Math.pow(d, ALPHA));
+  };
+  const lerp = (a, b, ta, tb, t) => {
+    const span = (tb - ta) || 1e-9;
+    const w = (tb - t)/span, v = (t - ta)/span;
+    return [a[0]*w + b[0]*v, a[1]*w + b[1]*v];
+  };
+
+  const dense = [];
+  const STEPS = 24;
+  for (let i = 0; i < m; i++){
+    const p0 = points[(i-1+m)%m], p1 = points[i];
+    const p2 = points[(i+1)%m],   p3 = points[(i+2)%m];
+    const t0 = 0, t1 = knot(t0,p0,p1), t2 = knot(t1,p1,p2), t3 = knot(t2,p2,p3);
+    for (let s = 0; s < STEPS; s++){
+      const t = t1 + (t2 - t1) * (s/STEPS);
+      const A1 = lerp(p0,p1,t0,t1,t), A2 = lerp(p1,p2,t1,t2,t), A3 = lerp(p2,p3,t2,t3,t);
+      const B1 = lerp(A1,A2,t0,t2,t), B2 = lerp(A2,A3,t1,t3,t);
+      dense.push(lerp(B1,B2,t1,t2,t));
+    }
+  }
+
+  const dn = dense.length;
+  const cum = [0];
+  for (let i = 0; i < dn; i++) cum.push(cum[i] + dist(dense[i], dense[(i+1)%dn]));
+  const total = cum[dn];
+
+  const out = [];
+  let j = 0;
+  for (let i = 0; i < count; i++){
+    const target = (i/count) * total;
+    while (j < dn && cum[j+1] < target) j++;
+    const seg = cum[j+1] - cum[j] || 1;
+    const f = (target - cum[j]) / seg;
+    const a = dense[j], b = dense[(j+1)%dn];
+    out.push([a[0] + (b[0]-a[0])*f, a[1] + (b[1]-a[1])*f]);
+  }
+  return out;
+}
+
+/** Scale and centre a loop to fill a box, preserving aspect ratio. */
+function fitToBox(points, margin, boxW, boxH){
+  const xs = points.map(p => p[0]), ys = points.map(p => p[1]);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const w = maxX - minX || 1, h = maxY - minY || 1;
+  const s = Math.min((boxW - margin*2) / w, (boxH - margin*2) / h);
+  const ox = (boxW - w*s)/2 - minX*s;
+  const oy = (boxH - h*s)/2 - minY*s;
+  return points.map(p => [p[0]*s + ox, p[1]*s + oy]);
+}
+
+/* How tight a corner the car can actually take, as a radius in design units.
+   Below this the track is undriveable however wide it is. */
+function minCornerRadius(halfWidth){
+  return Math.max(18, (CAR_L + CAR_W) * 1.4 - (halfWidth - HALF_W) * 0.3);
+}
+
+/**
+ * Build a track from traced control points.
+ *
+ *   trackFromPoints(points, { name, halfWidth, margin, samples })
+ *
+ * `points` is a closed loop in any coordinate space — latitude/longitude,
+ * pixels off a screenshot, whatever. Only the shape matters; it is normalised.
+ * Returns the same object shape as buildTrack, plus a report of any corners
+ * too tight for the car, so an import can be checked rather than assumed.
+ */
+function trackFromPoints(points, opts = {}){
+  const samples  = opts.samples || 360;
+  /* The world a track lives in need not be the screen. A circuit drawn at
+     realistic proportions is far larger than the canvas, and is viewed
+     through a camera that follows the car. */
+  const boxW = opts.width  || DW;
+  const boxH = opts.height || DH;
+  /* Margin is on top of the track's own half-width, which is already added
+     below — 70 as well left imported circuits floating in the middle of the
+     canvas. */
+  const margin   = opts.margin === undefined ? 22 : opts.margin;
+  const halfWidth = opts.halfWidth === undefined ? HALF_W : opts.halfWidth;
+
+  const fitted = fitToBox(points, margin + halfWidth, boxW, boxH);
+  let path = resampleLoop(fitted, samples);
+  path = rotateToStraight(path);
+
+  const track = assembleTrack(path, {
+    halfWidth,
+    source: opts.source || 'circuit',
+    name: opts.name || null,
+    day: opts.day
+  });
+  track.report = inspectCorners(track);
+  track.world = { width: boxW, height: boxH };
+  track.report.proximity = closestApproach(track);
+  return track;
+}
+
+/* How close two non-adjacent parts of the loop come to each other. Below
+   twice the track width their tarmac overlaps on screen, which is the thing
+   that makes real circuits hard to draw at exaggerated widths. */
+function closestApproach(track){
+  const { path, n, halfWidth } = track;
+  const skip = Math.max(4, Math.round(n * 0.10));
+  let worst = Infinity, overlapping = 0;
+  for (let i = 0; i < n; i++){
+    for (let j = i + skip; j < n - (i < skip ? skip : 0); j++){
+      const d = Math.hypot(path[i][0]-path[j][0], path[i][1]-path[j][1]);
+      if (d < worst) worst = d;
+      if (d < halfWidth*2) overlapping++;
+    }
+  }
+  return { closest: +worst.toFixed(1), needed: halfWidth*2, overlapping };
+}
+
+/* Corners an imported circuit can't support, reported rather than silently
+   smoothed — a traced track should be checked by a person before it ships.
+
+   Two distinct failures, which want different fixes:
+
+     tooTightToDrive  the centreline turns harder than the car can, even using
+                      the full width. Widen the track or ease the corner.
+
+     edgeFolds        the corner radius is smaller than the track is wide, so
+                      the inner edge crosses itself and the drawing breaks.
+                      Narrow the track or ease the corner.
+
+   A hairpin on a wide track often hits the second and not the first. */
+function inspectCorners(track){
+  const { path, n, halfWidth } = track;
+  const driveLimit = minCornerRadius(halfWidth);
+  const tooTightToDrive = [], edgeFolds = [];
+  let tightest = Infinity;
+
+  for (let i = 0; i < n; i++){
+    const a = path[(i-4+n)%n], b = path[i], c = path[(i+4)%n];
+    const ab = dist(a,b), bc = dist(b,c), ca = dist(c,a);
+    const area = Math.abs((b[0]-a[0])*(c[1]-a[1]) - (c[0]-a[0])*(b[1]-a[1])) / 2;
+    if (area < 1e-6) continue;
+    const radius = (ab*bc*ca) / (4*area);
+    tightest = Math.min(tightest, radius);
+    if (radius < driveLimit) tooTightToDrive.push({ index: i, radius: +radius.toFixed(1) });
+    if (radius < halfWidth)  edgeFolds.push({ index: i, radius: +radius.toFixed(1) });
+  }
+  return {
+    tooTightToDrive, edgeFolds,
+    tightestRadius: +tightest.toFixed(1),
+    driveLimit: +driveLimit.toFixed(1),
+    ok: tooTightToDrive.length === 0 && edgeFolds.length === 0
+  };
+}
+
+/* Render-only: the drawn edges drift slightly so the line reads as inked.
+   Whole harmonics of the loop, so it closes with no seam. Physics uses the
+   exact width and ignores this. */
+function edgePoints(track, side, seed){
+  const { path, normals, n } = track;
+  const hw = track.halfWidth === undefined ? HALF_W : track.halfWidth;
+  return path.map((p, i) => {
+    const u = (i/n) * Math.PI * 2;
+    const w = Math.sin(u*3 + seed)*0.9 + Math.sin(u*5 + seed*2.3)*0.6;
+    const off = side*hw + w;
+    return [p[0] + normals[i][0]*off, p[1] + normals[i][1]*off];
+  });
+}
+
+/* ============================================================================
+   The simulation
+   ========================================================================= */
+function createSim(track){
+  const { path: PATH, normals: NORMALS, n: N, gridIndex, checkpoints: CPS } = track;
+  /* Width comes from the track, not the module constant, so imported circuits
+     and width experiments both work without touching the physics. */
+  const HW = track.halfWidth === undefined ? HALF_W : track.halfWidth;
+
+  const car  = { x:0, y:0, h:0, vx:0, vy:0, spd:0, slip:0 };
+  const prev = { x:0, y:0, h:0 };
+
+  let ticks = 0, hits = 0, lastHitTick = -1e9;
+  let nextCp = 0, lastIdx = 0, state = 'grid';
+  let sectorHits = new Array(SECTORS).fill(0);
+  let splitTicks = [];             // tick count as each split was crossed
+  let reverseRun = 0;              // how far we've been going the wrong way
+
+  function placeOnGrid(){
+    const i = gridIndex;
+    const a = PATH[i], b = PATH[(i+1)%N];
+    car.h = Math.atan2(b[1]-a[1], b[0]-a[0]);
+    car.x = a[0] + NORMALS[i][0]*GRID_SIDE;
+    car.y = a[1] + NORMALS[i][1]*GRID_SIDE;
+    car.vx = car.vy = car.spd = car.slip = 0;
+    prev.x = car.x; prev.y = car.y; prev.h = car.h;
+    lastIdx = i;
+  }
+
+  /* Nearest point on the centre line, projected onto each segment so the
+     wall doesn't feel faceted when you scrape along it. */
+  function nearest(x, y){
+    let best = Infinity, bi = 0, bx = 0, by = 0;
+    for (let i = 0; i < N; i++){
+      const a = PATH[i], b = PATH[(i+1)%N];
+      const ax = b[0]-a[0], ay = b[1]-a[1];
+      const t = Math.max(0, Math.min(1, ((x-a[0])*ax + (y-a[1])*ay) / (ax*ax + ay*ay || 1)));
+      const qx = a[0]+ax*t, qy = a[1]+ay*t;
+      const dx = x-qx, dy = y-qy, d2 = dx*dx + dy*dy;
+      if (d2 < best){ best = d2; bi = i; bx = qx; by = qy; }
+    }
+    return { d: Math.sqrt(best), i: bi, px: bx, py: by };
+  }
+
+  /* The track edge is solid. Past half-width minus the car's own reach along
+     the wall normal is a hit; head-on stops you, a graze scrubs and slides. */
+  function collide(){
+    const near = nearest(car.x, car.y);
+    let ox = car.x - near.px, oy = car.y - near.py;
+    const d = Math.hypot(ox, oy);
+    if (d < 1e-4) return { near, hit: null };
+    ox /= d; oy /= d;
+
+    const c = Math.abs( Math.cos(car.h)*ox + Math.sin(car.h)*oy);
+    const s = Math.abs(-Math.sin(car.h)*ox + Math.cos(car.h)*oy);
+    const limit = HW - (CAR_L*c + CAR_W*s);
+    if (d <= limit) return { near, hit: null };
+
+    car.x = near.px + ox*limit;
+    car.y = near.py + oy*limit;
+
+    const into = car.vx*ox + car.vy*oy;
+    const alongX = car.vx - into*ox, alongY = car.vy - into*oy;
+    const impact = Math.max(0, into);
+    const bite = Math.min(1, impact/110);
+    const keep = 0.92 - 0.85*bite;
+
+    car.vx = alongX*keep - ox*impact*BOUNCE;
+    car.vy = alongY*keep - oy*impact*BOUNCE;
+    car.spd = car.vx*Math.cos(car.h) + car.vy*Math.sin(car.h);
+    car.slip = 0;
+
+    if (impact <= HIT_IMPACT) return { near, hit: null };
+
+    let counted = false;
+    if (state === 'running' && ticks - lastHitTick > HIT_DEBOUNCE){
+      lastHitTick = ticks;
+      hits++;
+      sectorHits[Math.min(SECTORS-1, Math.floor(near.i/N*SECTORS))] = 1;
+      counted = true;
+    }
+    return { near, hit: { x: car.x, y: car.y, ox, oy, bite, counted } };
+  }
+
+  /* Each checkpoint as a line: a point on the centreline plus the forward
+     tangent there. A crossing is the signed distance along that tangent
+     flipping from negative to positive — the same test the drawn sector beam
+     uses, so the recorded split and the visible gate agree exactly. */
+  const CP_LINES = CPS.map(idx => {
+    const a = PATH[(idx-1+N)%N], b = PATH[(idx+1)%N];
+    const tx = b[0]-a[0], ty = b[1]-a[1], l = Math.hypot(tx,ty) || 1;
+    return { idx, p: PATH[idx], tx: tx/l, ty: ty/l };
+  });
+  let cpPrev = null;          // last signed distance to the current target
+
+  /* Checkpoints must be taken in order, so the lap can't be shortcut. The
+     line only ever ends the lap — the clock starts on the first input. */
+  function progress(i){
+    if (state === 'running' && nextCp < CP_LINES.length){
+      const s = CP_LINES[nextCp];
+      const dx = car.x - s.p[0], dy = car.y - s.p[1];
+      const along = dx*s.tx + dy*s.ty;
+      /* Only test near the gate, or a distant part of the loop with the same
+         tangent orientation could trip it. */
+      const near = Math.hypot(dx, dy) < HW*2.5;
+      if (!near){
+        cpPrev = null;
+      } else if (cpPrev !== null && cpPrev < 0 && along >= 0){
+        nextCp++;
+        splitTicks.push(ticks);
+        cpPrev = null;
+      } else {
+        cpPrev = along;
+      }
+    }
+
+    /* Signed progress along the loop, shortest way round. Driving backwards
+       still collects checkpoints in order, but the finish needs a forward
+       crossing — so without this the player just circles forever. */
+    let d = i - lastIdx;
+    if (d >  N/2) d -= N;
+    if (d < -N/2) d += N;
+    if (state === 'running'){
+      if (d < 0)      reverseRun = Math.min(WRONG_WAY_SAMPLES*4, reverseRun - d);
+      else if (d > 0) reverseRun = Math.max(0, reverseRun - d*2);
+    } else {
+      reverseRun = 0;
+    }
+
+    const crossed = lastIdx > N*0.9 && i < N*0.1;
+    lastIdx = i;
+    if (crossed && state === 'running' && nextCp >= CPS.length){
+      state = 'done';
+      return true;
+    }
+    return false;
+  }
+
+  function step(input){
+    ticks++;
+    prev.x = car.x; prev.y = car.y; prev.h = car.h;
+
+    /* input is either a v5 nibble (0..15) or a v6 packed word. Decoding both
+       to the same {throttle, brake, steer} shape means the physics below is
+       identical in either mode — full throw analog exactly reproduces v5. */
+    const cmd = SIM_ANALOG ? decodeAnalog(input) : decodeLegacy(input);
+    const authority = Math.min(1, Math.abs(car.spd)/70);
+    car.h += cmd.steer * TURN * authority * Math.sign(car.spd || 1) * FIXED;
+
+    const fx = Math.cos(car.h), fy = Math.sin(car.h);
+    let fwd = car.vx*fx + car.vy*fy;
+    let lat = -car.vx*fy + car.vy*fx;
+
+    fwd += cmd.throttle * ACCEL * FIXED;
+    fwd -= cmd.brake    * BRAKE * FIXED;
+    /* engine braking still kicks in when neither pedal is pressed. In v5 this
+       was a hard "no keys held" test; in v6 it fades in as both pedals lift. */
+    const idle = Math.max(0, 1 - cmd.throttle - cmd.brake);
+    fwd *= Math.pow(0.55 + 0.45*(1-idle), FIXED);
+
+    fwd = Math.max(-MAX_SPD*0.3, Math.min(MAX_SPD, fwd));
+    lat *= Math.pow(GRIP, FIXED);
+
+    car.spd = fwd; car.slip = Math.abs(lat);
+    car.vx = fx*fwd - fy*lat;
+    car.vy = fy*fwd + fx*lat;
+
+    car.x += car.vx*FIXED;
+    car.y += car.vy*FIXED;
+
+    const { near, hit } = collide();
+    let finished = progress(near.i);
+
+    // the run always terminates, one way or another
+    if (!finished && state === 'running' && ticks >= MAX_LAP_TICKS){
+      state = 'dnf';
+      finished = true;
+    }
+    return { hit, finished, nearIndex: near.i };
+  }
+
+  placeOnGrid();
+
+  return {
+    track, car, prev, nearest,
+    get ticks(){ return ticks; },
+    get hits(){ return hits; },
+    get state(){ return state; },
+    get sectorHits(){ return sectorHits.slice(); },
+    get nextCp(){ return nextCp; },
+    get wrongWay(){ return state === 'running' && reverseRun >= WRONG_WAY_SAMPLES; },
+    get ticksLeft(){ return Math.max(0, MAX_LAP_TICKS - ticks); },
+
+    /* Which sector the car is in right now, 1-based, for a live readout. */
+    get sector(){ return Math.min(SECTORS, splitTicks.length + 1); },
+
+    /* Duration of each sector in ticks. Sector 1 contains the run from the
+       grid to the line, so the three always sum to the lap time. Entries are
+       null for sectors not yet completed. */
+    get sectorTicks(){
+      const bounds = [0, ...splitTicks];
+      if (state !== 'running') bounds.push(ticks);
+      const out = [];
+      for (let k = 0; k < SECTORS; k++)
+        out.push(bounds[k+1] === undefined ? null : bounds[k+1] - bounds[k]);
+      return out;
+    },
+    get splitTicks(){ return splitTicks.slice(); },
+    elapsedMs(){ return ticks * FIXED * 1000; },
+    start(){
+      if (state !== 'grid') return false;
+      placeOnGrid();
+      ticks = 0; hits = 0; lastHitTick = -1e9; nextCp = 0;
+      sectorHits = new Array(SECTORS).fill(0);
+      splitTicks = [];
+      cpPrev = null;
+      reverseRun = 0;
+      state = 'running';
+      return true;
+    },
+    /* Seed the car's state before a replay. Practice laps roll continuously,
+       so most of them begin mid-circulation rather than on the grid — without
+       this, replaying one from a standstill would diverge immediately. */
+    seedCar(st){
+      car.x = st.x; car.y = st.y; car.h = st.h;
+      car.vx = st.vx; car.vy = st.vy;
+      car.spd = st.spd; car.slip = st.slip || 0;
+      prev.x = car.x; prev.y = car.y; prev.h = car.h;
+      lastIdx = nearest(car.x, car.y).i;
+      cpPrev = null;
+    },
+
+    /* Snapshot, for recording where a lap began. */
+    carState(){
+      return { x:car.x, y:car.y, h:car.h, vx:car.vx, vy:car.vy,
+               spd:car.spd, slip:car.slip };
+    },
+
+    /* Player gives up. A real outcome, not an error state — it gets a result
+       card and a share line like any other run. */
+    retire(){
+      if (state !== 'running') return false;
+      state = 'retired';
+      return true;
+    },
+
+    /* Roll straight into another lap without stopping the car. Practice only —
+       the daily attempt always ends at the line, which is what makes it a
+       single attempt. Clears the lap's timing, checkpoints and contact count
+       but leaves position, heading and velocity untouched, so speed carries
+       across the start/finish line the way it does in a real session. */
+    continueLap(){
+      if (state !== 'done') return false;
+      ticks = 0;
+      hits = 0;
+      lastHitTick = -1e9;
+      nextCp = 0;
+      sectorHits = new Array(SECTORS).fill(0);
+      splitTicks = [];
+      cpPrev = null;
+      reverseRun = 0;
+      state = 'running';
+      return true;
+    },
+    reset(){
+      placeOnGrid();
+      ticks = 0; hits = 0; lastHitTick = -1e9; nextCp = 0;
+      sectorHits = new Array(SECTORS).fill(0);
+      splitTicks = [];
+      cpPrev = null;
+      reverseRun = 0;
+      state = 'grid';
+    },
+    step
+  };
+}
+
+/* ============================================================================
+   Input streams — one nibble per tick
+
+   Header is 3 bytes: version, then tick count big-endian. That makes a stream
+   self-describing, so it survives a URL with no other context. ~275 URL-safe
+   characters for a seven second lap.
+   ========================================================================= */
+const B64URL = s => s.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const UNB64URL = s => s.replace(/-/g,'+').replace(/_/g,'/');
+
+function bytesToB64(bytes){
+  if (typeof btoa === 'function'){
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return B64URL(btoa(bin));
+  }
+  return B64URL(Buffer.from(bytes).toString('base64'));
+}
+function b64ToBytes(str){
+  const s = UNB64URL(str);
+  if (typeof atob === 'function'){
+    const bin = atob(s);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  return new Uint8Array(Buffer.from(s, 'base64'));
+}
+
+/* CRC-16/CCITT over the header and payload. This is an integrity check, not
+   an authenticity one: it catches a URL truncated by a chat app or mangled by
+   an email client, and lets us say "this link is damaged" instead of the
+   misleading "this lap is invalid".
+
+   It deliberately does NOT stop deliberate tampering — anyone can recompute
+   it. Forgery is already handled by the fact that a lap's time comes from
+   replaying its inputs, so an edited stream just produces whatever time it
+   actually drives, not a faster one. Real authenticity needs a server-side
+   secret, which belongs with the backend rather than in shipped JavaScript. */
+function crc16(bytes){
+  let crc = 0xFFFF;
+  for (let i = 0; i < bytes.length; i++){
+    crc ^= bytes[i] << 8;
+    for (let b = 0; b < 8; b++){
+      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+    }
+  }
+  return crc;
+}
+
+/* Header is 5 bytes: version, length (2), checksum (2). The checksum covers
+   the version, the length and the payload — everything but itself. */
+const HEADER_BYTES = 5;
+
+function finishPack(bytes){
+  const covered = new Uint8Array(bytes.length - 2);
+  covered[0] = bytes[0];
+  covered[1] = bytes[1];
+  covered[2] = bytes[2];
+  covered.set(bytes.subarray(HEADER_BYTES), 3);
+  const crc = crc16(covered);
+  bytes[3] = (crc >> 8) & 0xFF;
+  bytes[4] = crc & 0xFF;
+  return bytesToB64(bytes);
+}
+
+function packInputs(inputs){
+  const n = inputs.length;
+  if (n > 0xFFFF) throw new Error('lap too long to encode');
+
+  /* Discrete format: one nibble per tick, two per byte. */
+  if (!SIM_ANALOG){
+    const bytes = new Uint8Array(HEADER_BYTES + Math.ceil(n/2));
+    bytes[0] = SIM_VERSION_DISCRETE;
+    bytes[1] = (n >> 8) & 0xFF;
+    bytes[2] = n & 0xFF;
+    for (let i = 0; i < n; i++){
+      const v = inputs[i] & 0x0F;
+      if (i % 2 === 0) bytes[HEADER_BYTES + (i>>1)] |= v << 4;
+      else             bytes[HEADER_BYTES + (i>>1)] |= v;
+    }
+    return finishPack(bytes);
+  }
+
+  /* Analog format: 16-bit little-endian word per tick. Same header, wider
+     payload — roughly 3x the size, still comfortably URL-safe. */
+  const bytes = new Uint8Array(HEADER_BYTES + n*2);
+  bytes[0] = SIM_VERSION_ANALOG;
+  bytes[1] = (n >> 8) & 0xFF;
+  bytes[2] = n & 0xFF;
+  for (let i = 0; i < n; i++){
+    const w = inputs[i] & 0xFFFF;
+    bytes[HEADER_BYTES + i*2]     = w & 0xFF;
+    bytes[HEADER_BYTES + i*2 + 1] = (w >> 8) & 0xFF;
+  }
+  return finishPack(bytes);
+}
+
+/* Thrown when the checksum fails, so callers can tell a damaged link from an
+   invalid lap and say something useful about it. */
+class CorruptStreamError extends Error {
+  constructor(msg){ super(msg); this.name = 'CorruptStreamError'; }
+}
+
+function unpackInputs(str){
+  const bytes = b64ToBytes(str);
+  if (bytes.length < HEADER_BYTES) throw new Error('input stream too short');
+  const version = bytes[0];
+  const n = (bytes[1] << 8) | bytes[2];
+
+  const stride = version === SIM_VERSION_ANALOG ? 2 : 0.5;
+  const expected = HEADER_BYTES + (stride === 2 ? n*2 : Math.ceil(n/2));
+  if (version !== SIM_VERSION_DISCRETE && version !== SIM_VERSION_ANALOG)
+    throw new Error('unknown sim version ' + version);
+  if (bytes.length < expected)
+    throw new CorruptStreamError('link is truncated \u2014 it may have been cut short in transit');
+
+  /* Checksum first: a damaged link should say so, rather than decoding into
+     nonsense and reporting an invalid lap. */
+  const covered = new Uint8Array(bytes.length - 2);
+  covered[0] = bytes[0];
+  covered[1] = bytes[1];
+  covered[2] = bytes[2];
+  covered.set(bytes.subarray(HEADER_BYTES), 3);
+  const want = (bytes[3] << 8) | bytes[4];
+  if (crc16(covered) !== want)
+    throw new CorruptStreamError('link is damaged \u2014 some of it was changed or lost in transit');
+
+  const out = new Uint16Array(n);
+  if (version === SIM_VERSION_DISCRETE){
+    for (let i = 0; i < n; i++){
+      const b = bytes[HEADER_BYTES + (i>>1)];
+      out[i] = (i % 2 === 0) ? (b >> 4) & 0x0F : b & 0x0F;
+    }
+  } else {
+    for (let i = 0; i < n; i++){
+      out[i] = bytes[HEADER_BYTES + i*2] | (bytes[HEADER_BYTES + i*2 + 1] << 8);
+    }
+  }
+  return { version, inputs: out };
+}
+
+/* ============================================================================
+   Replay and verification
+
+   Because the sim is deterministic, a submitted lap can be recomputed from
+   its inputs alone. The server trusts the input stream, never the claim.
+   ========================================================================= */
+function replay(day, inputs, onTick){
+  const sim = createSim(buildTrack(day));
+  sim.start();
+  for (let i = 0; i < inputs.length; i++){
+    const ev = sim.step(inputs[i]);
+    if (onTick) onTick(i, sim, ev);
+    if (ev.finished) break;
+  }
+  return {
+    finished: sim.state === 'done',
+    outcome: sim.state,
+    ticks: sim.ticks,
+    ms: sim.elapsedMs(),
+    hits: sim.hits,
+    sectorHits: sim.sectorHits,
+    sectorTicks: sim.sectorTicks
+  };
+}
+
+/**
+ * Recompute a claimed lap. Returns { ok, reason, ...result }.
+ * Everything a client sends is treated as a claim until this agrees.
+ */
+function verifyLap({ day, packed, claimedTicks, claimedHits, maxTicks = 60*60*5 }){
+  let parsed;
+  try { parsed = unpackInputs(packed); }
+  catch (e){
+    /* A damaged link and a bogus one deserve different messages: the first is
+       usually a chat app truncating a long URL, which the sender can fix. */
+    return {
+      ok: false,
+      corrupt: e && e.name === 'CorruptStreamError',
+      reason: (e && e.message) || 'unreadable input stream'
+    };
+  }
+
+  if (parsed.version !== ACTIVE_VERSION)
+    return { ok: false, reason: 'sim version ' + parsed.version + ', expected ' + ACTIVE_VERSION };
+  if (parsed.inputs.length > maxTicks)
+    return { ok: false, reason: 'too many ticks' };
+
+  const r = replay(day, parsed.inputs);
+  if (!r.finished) return { ok: false, reason: 'lap never crossed the line', ...r };
+  if (claimedTicks !== undefined && claimedTicks !== r.ticks)
+    return { ok: false, reason: 'time mismatch: claimed ' + claimedTicks + ', replayed ' + r.ticks, ...r };
+  if (claimedHits !== undefined && claimedHits !== r.hits)
+    return { ok: false, reason: 'contact mismatch: claimed ' + claimedHits + ', replayed ' + r.hits, ...r };
+
+  return { ok: true, ...r };
+}
+
+/* Two different day counts, on purpose.
+
+   dayNumber() seeds the track. It counts from a fixed epoch and must never
+   change, or every past circuit changes with it.
+
+   puzzleNumber() is the number players see. It counts from launch, so the
+   first live circuit is Day 1 and everything before it reads Day 0. Tracks
+   still rotate daily before launch — only the label is held at zero. */
+const EPOCH  = Date.UTC(2026, 0, 1);
+
+/** The day the game goes live. Everything before it reads as a preview, and
+ *  the first public circuit is Day 1. Months are zero-indexed, so 8 = September.
+ *
+ *  CHANGE THIS ONE LINE to move launch. Nothing else depends on it — the
+ *  tracks themselves are seeded from EPOCH, so moving the launch date changes
+ *  the labels but never the circuits. */
+const LAUNCH = Date.UTC(2026, 7, 24);  // 24 August 2026
+
+const dayOf = now => Math.floor(
+  (Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - EPOCH) / 86400000);
+
+function dayNumber(now = new Date()){
+  return dayOf(now);
+}
+
+function puzzleNumber(now = new Date()){
+  const launchDay = Math.floor((LAUNCH - EPOCH) / 86400000);
+  return Math.max(0, dayOf(now) - launchDay + 1);
+}
+
+/* ---- end sim.js ---- */
+
+/* ---- inlined from audio-sample.js ---- */
+/* Engine sample — one loop of a V10 at a steady 371 Hz firing
+ * frequency, which is around 4447 rpm.
+ *
+ * Cut from a longer recording: the steadiest 0.95 seconds of it, with the
+ * loop length chosen to minimise the waveform discontinuity at the seam and a
+ * 12 ms equal-power crossfade over the join. Everything the engine does at
+ * other revs is this clip played faster or slower.
+ *
+ * Embedded as base64 rather than fetched, so standalone.html still works when
+ * opened straight from disk, where fetch is blocked.
+ *
+ * SOURCE AND LICENCE: supplied by the project owner. Confirm the licence
+ * permits redistribution before shipping — a royalty-free download is not
+ * automatically redistributable inside a product.
+ */
+const SAMPLE = {
+  /* Firing frequency of the clip as recorded. Playback rate is worked out
+     against this, so it must match the audio or every gear is out of tune. */
+  baseHz: 370.6,
+  /* Intended loop length. The decoder adds a little silence at the front of
+     an mp3, so the real loop points are found at decode time rather than
+     assumed — see findLoopPoints. */
+  loopSeconds: 0.9478,
+  mime: 'audio/mpeg',
+  base64:
+  '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' +
+  '0VDEsF5kcpMm0ZbXECBkyUrHvKqlSVuipfWmaGzqusn2OUe2GbbfFj9ysqZdMVvnA4gUCMDE6HgnQgQp+UlNs+QjviIGRfgoQi+d' +
+  'TosQevOA8v/uuTd3X81+W4IBYAKV7erDsplpCyLNRjcVQCYPxAMEpWGIHxeDh65C6kiZOrl2VLLLt114UDOq5azmoU73bFXcVb26' +
+  '0GGJjcLKq+hEpYU+GR9LG/0AQMDgKSFqdYBlOgS7P3X/qFAuP73/+2DE6QCPwPlp7DDNQc0XbTWGGeh+u3//qv+1wCEAAAAJyJLl' +
+  'tviq9ajywVAoOXIF/y9sCxYnk7QHaXJDQmMB+aQkREK5k4ueV1NdEsNOhJk4uqw50Eppv23RZxr4vrpS9rVsNvMhXlHZ35ep7e/+' +
+  'Ff+MNl9z3d1WImkrvH7dqeF53Xme8lCmAEwKh88PdrVQtAADIAABAAABScb8jrgytVcEoRF+QIENJkCgZSmk0ohAUeMst0XPXKzj' +
+  'mCKFSpXQnYjZsjuDUqlihRjCJcbhqmGolcYUHNcG8n1afijXSFHLEa/7Y2pEdiqvRiecoKEwXCudY9jkdx3irg7Q9riWZoE+c1//' +
+  '+2DE6ACPzPVlrDBvyaAYrXWGDbGcbqxHssvWLcWIyuULauUi8uX9s1zWFiNBViqbozkrGvT+SjexeM8a4kO8ema/OLY3XOpq4l3L' +
+  'aSmqZvTTI2QWeC5vHJku4Mc7+SFi2fXWcWtuCJf/8YXJhk4AwOQYfUxBTUUzLjEwMFVVVVVVVVVVVVVVVW05SCj0kJQldDeEOWB9' +
+  'CHEKWlKcpoqFsQQIiLEdGRk9i4yPgqCp0ShrrBUsHAaBpYKgUFToiPKBo8CrzvR1A1W5YKuBpwNHip0r/qPRLBVyj3/+HazpU7T/' +
+  '/qfREqpMQU1FMy4xMDCqqqqqqqqqqqqqqqqqqqqqqqqqqqr/+2LE7IAOxSdpVYSAE0ayq+sy8ACqqqqqqqqqqqqqqqqqqqqqqqqq' +
+  'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq' +
+  'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq' +
+  'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//tg' +
+  'xLaDy6Q/Bhz2AAAAADSAAAAEqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq' +
+  'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq' +
+  'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq' +
+  'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq'
+};
+
+/* ---- end audio-sample.js ---- */
+
+/* ---- inlined from audio.js ---- */
+/* Ink Circuit — engine audio
+ * ---------------------------------------------------------------------------
+ * A recorded V10 loop, played faster or slower to follow the revs, with a
+ * synthesised sub-octave underneath for weight.
+ *
+ * Why both: a sample carries character no oscillator stack gets close to, but
+ * pitching one up thins its bottom end and pitching it down muddies the top.
+ * The synth sub tracks the same frequency and fills the low end at every rate,
+ * so the engine keeps its body across the whole range.
+ *
+ * If the sample can't be decoded — an old browser, a stripped build — the
+ * synth runs alone rather than the game falling silent.
+ *
+ * The gearbox is a fiction. The car has continuous speed and no gears, so the
+ * speed range is divided into bands and the playback rate climbs through each
+ * and drops at the change. That drop is the upshift you hear, and it is what
+ * makes acceleration sound like acceleration rather than a slide whistle.
+ *
+ * Nothing here can affect the simulation. It only ever reads state.
+ */
+
+const TUNING = {
+  /* --- gearbox ------------------------------------------------------- */
+  gears:        6,
+  shiftDrop:    0.58,   // rate sags to this fraction while changing
+  shiftTime:    0.10,   // seconds of interrupted drive
+  gearOverlap:  0.10,   // later gears start higher, so they aren't identical
+
+  /* --- playback rate ---------------------------------------------------
+     The usable window. Past roughly half to double speed a loop stops
+     sounding like an engine and starts sounding like a tape effect, so the
+     whole speed range maps into this rather than onto true rpm. */
+  rateIdle:     0.72,
+  rateRedline:  1.95,
+
+  /* --- levels -------------------------------------------------------- */
+  sampleGain:   0.85,
+  subLevel:     0.40,   // synth sub-octave, where the weight lives
+  subTrack:     0.50,   // fraction of the sample's pitch the sub sits at
+
+  /* --- load ---------------------------------------------------------- */
+  cutoffIdle:   1400,   // lowpass, hertz, closed throttle
+  cutoffFull:  12000,   // wide open
+  gainIdle:      0.20,
+  gainFull:      0.62,
+  loadSlew:      0.07,  // seconds for load changes to take hold
+  rateSlew:      0.05,  // stops the pitch stepping between frames
+
+  /* --- tyres -----------------------------------------------------------
+     Driven by lateral velocity, which the sim already tracks as car.slip.
+     A threshold keeps it quiet through ordinary cornering — a car that
+     squeals constantly stops telling you anything. */
+  /* Measured against real laps: a tidy lap sits around 75 lateral units most
+     of the time and peaks near 180, so silence below 120 keeps ordinary
+     cornering quiet and leaves the noise for the corners where the car is
+     genuinely sliding. The gain curve is squared on top of that, which makes
+     it more selective still. */
+  slipStart:   120,     // lateral units per second before any noise at all
+  slipFull:    185,     // and where it reaches full volume
+  screechGain:   0.34,
+  screechHz:   2600,    // centre of the band; rises a little with speed
+  screechQ:      5.5,
+
+  /* --- wall contact ----------------------------------------------------
+     Paper and ink, not metal: a dull knock rather than a crash, scaled by
+     how hard the sim says the hit was. */
+  thudGain:      0.75,
+  thudHz:        160,   // body of the knock
+  thudDecay:     0.20,  // seconds
+  scrapeGain:    0.30,  // the rasp riding on top of it
+
+  /* --- chimes ----------------------------------------------------------
+     Small struck bells at the sector gates, a fifth apart, with the lap
+     chime higher and doubled so finishing reads as an arrival. */
+  chimeGain:     0.22,
+  chimeHz:       880,
+  chimeDecay:    0.9,
+
+  /* --- output -------------------------------------------------------- */
+  master:        0.55
+};
+
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+/* Speed to gear and position within it. Both are inventions, but consistent
+   ones — the same speed always gives the same gear at the same revs. */
+function gearFor(speed, maxSpeed, t = TUNING){
+  const f = clamp(speed / maxSpeed, 0, 1);
+  const band = 1 / t.gears;
+  const gear = Math.min(t.gears - 1, Math.floor(f / band));
+  const within = (f - gear * band) / band;         // 0..1 through this gear
+
+  /* Each gear starts a little higher than the last, so pulling away in sixth
+     doesn't sound identical to pulling away in first. */
+  const lift = t.gearOverlap * (gear / Math.max(1, t.gears - 1));
+  const lo = t.rateIdle + (t.rateRedline - t.rateIdle) * lift;
+  const rate = lo + (t.rateRedline - lo) * within;
+  return { gear, within, rate };
+}
+
+/* An mp3 decodes with a little silence in front of it, which would put the
+   loop points in the wrong place and click once a second. Find where the
+   audio actually starts rather than trusting the file length. */
+function findLoopPoints(buffer, loopSeconds){
+  const d = buffer.getChannelData(0);
+  let first = 0;
+  for (let i = 0; i < d.length; i++){
+    if (Math.abs(d[i]) > 0.02){ first = i; break; }
+  }
+  const start = first / buffer.sampleRate;
+  const end = Math.min(buffer.duration, start + loopSeconds);
+  return { start, end };
+}
+
+/* Shared noise buffer. Two seconds is long enough that the loop point is
+   inaudible under everything else, and cheaper than generating noise per
+   event. */
+function makeNoise(ctx){
+  const frames = Math.floor(ctx.sampleRate * 2);
+  const buf = ctx.createBuffer(1, frames, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < frames; i++) d[i] = Math.random()*2 - 1;
+  return buf;
+}
+
+/* The one-shot sounds: tyres, walls, chimes. Separate from the engine
+   because they're events rather than a continuous voice, and because a
+   failure in one shouldn't silence the other. */
+function createEffects(ctx, t = TUNING){
+  const out = ctx.createGain();
+  out.gain.value = 1;
+  const noise = makeNoise(ctx);
+
+  /* ---- tyre scrub: a continuous voice held at zero until the car slides */
+  const screechSrc = ctx.createBufferSource();
+  screechSrc.buffer = noise; screechSrc.loop = true;
+  const screechBand = ctx.createBiquadFilter();
+  screechBand.type = 'bandpass';
+  screechBand.frequency.value = t.screechHz;
+  screechBand.Q.value = t.screechQ;
+  const screechGain = ctx.createGain();
+  screechGain.gain.value = 0;
+  screechSrc.connect(screechBand); screechBand.connect(screechGain);
+  screechGain.connect(out);
+  screechSrc.start();
+
+  function setSlip(now, slip, speedFrac){
+    /* Below the threshold there is no sound at all, so ordinary cornering
+       stays silent and a real slide is worth hearing. */
+    const f = clamp((slip - t.slipStart) / (t.slipFull - t.slipStart), 0, 1);
+    screechGain.gain.setTargetAtTime(f * f * t.screechGain, now, 0.05);
+    screechBand.frequency.setTargetAtTime(
+      t.screechHz * (0.75 + 0.5*speedFrac), now, 0.08);
+  }
+
+  /* ---- wall contact: a filtered thud with a short rasp over it ---- */
+  function thud(now, strength){
+    const s = clamp(strength, 0, 1);
+
+    const body = ctx.createOscillator();
+    body.type = 'sine';
+    body.frequency.setValueAtTime(t.thudHz * (1 + 0.8*s), now);
+    body.frequency.exponentialRampToValueAtTime(t.thudHz * 0.55, now + t.thudDecay);
+    const bodyGain = ctx.createGain();
+    bodyGain.gain.setValueAtTime(0.0001, now);
+    bodyGain.gain.exponentialRampToValueAtTime(t.thudGain * (0.35 + 0.65*s), now + 0.006);
+    bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + t.thudDecay);
+    body.connect(bodyGain); bodyGain.connect(out);
+    body.start(now); body.stop(now + t.thudDecay + 0.05);
+
+    const rasp = ctx.createBufferSource();
+    rasp.buffer = noise;
+    rasp.playbackRate.value = 0.8 + 0.6*s;
+    const raspBand = ctx.createBiquadFilter();
+    raspBand.type = 'bandpass';
+    raspBand.frequency.value = 900 + 1500*s;
+    raspBand.Q.value = 1.1;
+    const raspGain = ctx.createGain();
+    const len = 0.06 + 0.10*s;
+    raspGain.gain.setValueAtTime(t.scrapeGain * s, now);
+    raspGain.gain.exponentialRampToValueAtTime(0.0001, now + len);
+    rasp.connect(raspBand); raspBand.connect(raspGain); raspGain.connect(out);
+    rasp.start(now, Math.random()*1.5); rasp.stop(now + len + 0.02);
+  }
+
+  /* ---- chimes: a struck bell, sine plus a quiet inharmonic partial ---- */
+  function chime(now, hz, gain, decay){
+    for (const [mult, level] of [[1, 1], [2.76, 0.28]]){
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = hz * mult;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(gain * level, now + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+      osc.connect(g); g.connect(out);
+      osc.start(now); osc.stop(now + decay + 0.05);
+    }
+  }
+
+  /* Sector gates climb a fifth each, so where you are in the lap is audible
+     without looking. */
+  const SECTOR_STEPS = [1, 1.5, 2];
+  function sector(now, index){
+    chime(now, t.chimeHz * (SECTOR_STEPS[index] || 1), t.chimeGain, t.chimeDecay);
+  }
+  /* Crossing the line. An ordinary lap gets two notes falling to rest; a
+     personal best gets a third, rising instead, and ringing on longer. The
+     shape is the signal — you know which one you've done before you look at
+     the clock. */
+  function lap(now, best){
+    if (!best){
+      chime(now,        t.chimeHz * 2,   t.chimeGain * 1.1, t.chimeDecay);
+      chime(now + 0.11, t.chimeHz * 1.5, t.chimeGain,       t.chimeDecay);
+      return;
+    }
+    chime(now,        t.chimeHz * 2, t.chimeGain,       t.chimeDecay * 0.8);
+    chime(now + 0.10, t.chimeHz * 3, t.chimeGain,       t.chimeDecay * 0.8);
+    chime(now + 0.21, t.chimeHz * 4, t.chimeGain * 1.2, t.chimeDecay * 2.0);
+  }
+
+  function silence(now){
+    screechGain.gain.setTargetAtTime(0, now, 0.05);
+  }
+
+  function stop(){ try { screechSrc.stop(); } catch (_) {} }
+
+  return { node: out, setSlip, thud, sector, lap, silence, stop };
+}
+
+async function createEngine(ctx, t = TUNING){
+  const out = ctx.createGain();
+  out.gain.value = 0;
+
+  /* One lowpass across the whole engine. Throttle opens and closes it, which
+     is most of what separates being on the power from coasting — and closing
+     it on a lift is the engine braking, with no separate sound needed. */
+  const tone = ctx.createBiquadFilter();
+  tone.type = 'lowpass';
+  tone.frequency.value = t.cutoffIdle;
+  tone.Q.value = 0.7;
+  tone.connect(out);
+
+  // ---- the recorded loop ----
+  let source = null, usingSample = false;
+  const sampleGain = ctx.createGain();
+  sampleGain.gain.value = t.sampleGain;
+  sampleGain.connect(tone);
+
+  try {
+    const bin = atob(SAMPLE.base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const buffer = await new Promise((res, rej) => {
+      const p = ctx.decodeAudioData(bytes.buffer, res, rej);
+      if (p && p.then) p.then(res, rej);      // callback and promise forms
+    });
+    const pts = findLoopPoints(buffer, SAMPLE.loopSeconds);
+    source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    source.loopStart = pts.start;
+    source.loopEnd = pts.end;
+    source.connect(sampleGain);
+    source.start(0, pts.start);
+    usingSample = true;
+  } catch (_){
+    usingSample = false;                       // synth carries it alone
+  }
+
+  // ---- synthesised sub-octave, and the fallback voice ----
+  const subOsc = ctx.createOscillator();
+  subOsc.type = 'sawtooth';
+  const subGain = ctx.createGain();
+  subGain.gain.value = usingSample ? t.subLevel : 1;
+  subOsc.connect(subGain); subGain.connect(tone);
+  subOsc.start();
+
+  let shiftUntil = 0, lastGear = 0;
+
+  function update(now, { speed, maxSpeed, throttle, brake, running }){
+    if (!running){
+      out.gain.setTargetAtTime(0, now, 0.08);
+      return null;
+    }
+    const { gear, rate } = gearFor(speed, maxSpeed, t);
+
+    if (gear !== lastGear){
+      if (gear > lastGear) shiftUntil = now + t.shiftTime;
+      lastGear = gear;
+    }
+    const shifting = now < shiftUntil;
+
+    // during a change the revs sag rather than the sound cutting out
+    const played = shifting ? rate * t.shiftDrop : rate;
+
+    if (source) source.playbackRate.setTargetAtTime(played, now, t.rateSlew);
+    subOsc.frequency.setTargetAtTime(
+      clamp(SAMPLE.baseHz * played * t.subTrack, 20, 500), now, t.rateSlew);
+
+    let load = throttle ? 1 : 0;
+    if (brake) load = -1;
+    if (shifting) load = 0;
+    const openness = load > 0 ? 1 : (load < 0 ? 0 : 0.28);
+
+    const rf = clamp((played - t.rateIdle) / (t.rateRedline - t.rateIdle), 0, 1);
+
+    const cutoff = t.cutoffIdle + (t.cutoffFull - t.cutoffIdle) * openness * (0.35 + 0.65*rf);
+    tone.frequency.setTargetAtTime(clamp(cutoff, 200, 18000), now, t.loadSlew);
+
+    let gain = t.gainIdle + (t.gainFull - t.gainIdle) * (0.3 + 0.7*rf) * (0.35 + 0.65*openness);
+    if (shifting) gain *= 0.5;
+    out.gain.setTargetAtTime(gain, now, t.loadSlew);
+    subGain.gain.setTargetAtTime(usingSample ? t.subLevel : 1, now, 0.1);
+
+    return {
+      gear, rate: played, shifting, load, usingSample,
+      hz: SAMPLE.baseHz * played,
+      rpm: (SAMPLE.baseHz * played) * 60 / 5     // notional, for the readout
+    };
+  }
+
+  function stop(){
+    try { if (source) source.stop(); subOsc.stop(); } catch (_) {}
+  }
+
+  return { node: out, update, stop, get usingSample(){ return usingSample; } };
+}
+
+/* ---- end audio.js ---- */
+
+
+(() => {
+  'use strict';
+
+  /* ==================================================================
+     This file draws and listens. Everything that decides a lap lives in
+     sim.js, so the page and the server can never disagree about a time.
+     ================================================================== */
+  const MAX_FRAME = 0.25;              // a backgrounded tab must not stack ticks
+
+  /* Research collection, off until the backend and the ethics approval exist.
+     While false the game never mentions research: no consent card, no footer
+     link, and no research field written to a saved lap.
+
+     Laps recorded while this is false were collected without consent and must
+     never be folded into the dataset later — retro-consent isn't a thing. The
+     absence of a `research` field on a stored lap is the marker for that. */
+  const RESEARCH_ENABLED = false;
+  const ROTATE_PORTRAIT = true;        // false keeps the circuit upright
+  /* Where a shared result or challenge link points. Change here and every
+     share, every ghost URL and the copy button all follow. */
+  const SHARE_URL = 'https://inkcircuit.ink/';
+  const INK = '#22242A', PAPER = '#F3EEE3', RED = '#9E3B32';
+  /* The ghost gets its own hue rather than a faded ink. Your car has an opaque
+     paper fill, so an overlapping ghost is hidden behind it — only its edges
+     show, and those edges need to identify themselves at a glance. A separate
+     hue does that where a lighter grey could not. Audited: 4.35 against paper
+     and 2.97 against the ink car, worst case across all three colour-vision
+     deficiencies. Shape still carries it too — the ghost is dashed and hollow. */
+  const GHOST = '#5A7183';
+
+  /* Report a fault the game caught itself, with enough context to reproduce.
+     Used where a failure is survivable but shouldn't pass unnoticed. */
+  function reportFault(kind, err){
+    try {
+      if (window.__reportError)
+        window.__reportError(kind, err && err.message ? err.message : String(err),
+                             err && err.stack, location.pathname);
+    } catch (_) {}
+  }
+
+  const DAY = dayNumber();          // seeds the track — keeps counting always
+  const PUZZLE = puzzleNumber();    // what players see — 0 until launch day
+  const KEY = 'ink-circuit:day';
+  const CONSENT_KEY = 'ink-circuit:consent';
+  const CONSENT_VERSION = 1;
+  const RULES_KEY = 'ink-circuit:seen-rules';
+  const PRACTICE_KEY = 'ink-circuit:practice';
+  const PRACTICE_LAPS_KEY = 'ink-circuit:practice-laps';
+  const SOUND_KEY = 'ink-circuit:sound';
+  const MAX_STORED_PRACTICE_LAPS = 40;   // keep local storage bounded
+
+  const track = buildTrack(DAY);
+  let sim = createSim(track);
+  const { path: PATH, normals: NORMALS, n: N } = track;
+  const OUTER = edgePoints(track,  1, 0.0);
+  const INNER = edgePoints(track, -1, 1.9);
+
+  /* ==================================================================
+     Storage — one attempt a day has to survive a refresh
+     ================================================================== */
+  const mem = {};
+  let backend = 'memory';
+  async function initStore(){
+    if (window.storage){
+      try { await window.storage.list('ink:'); backend = 'cloud'; return; } catch(e){}
+    }
+    try {
+      localStorage.setItem('ink:probe','1');
+      localStorage.removeItem('ink:probe');
+      backend = 'local';
+    } catch(e){}
+  }
+  async function load(){
+    try{
+      if (backend === 'cloud'){ const r = await window.storage.get(KEY); return r ? JSON.parse(r.value) : null; }
+      if (backend === 'local'){ const v = localStorage.getItem(KEY); return v ? JSON.parse(v) : null; }
+    } catch(e){}
+    return mem[KEY] || null;
+  }
+  async function saveKey(k, v){
+    mem[k] = v;
+    try{
+      if (backend === 'cloud'){ await window.storage.set(k, JSON.stringify(v)); return; }
+      if (backend === 'local'){ localStorage.setItem(k, JSON.stringify(v)); }
+    } catch(e){}
+  }
+  async function loadKey(k){
+    try{
+      if (backend === 'cloud'){ const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; }
+      if (backend === 'local'){ const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }
+    } catch(e){}
+    return mem[k] || null;
+  }
+
+  async function save(v){
+    mem[KEY] = v;
+    try{
+      if (backend === 'cloud'){ await window.storage.set(KEY, JSON.stringify(v)); return; }
+      if (backend === 'local'){ localStorage.setItem(KEY, JSON.stringify(v)); }
+    } catch(e){}
+  }
+
+  /* ==================================================================
+     Canvas layers: static track, accumulating ink, per-frame car
+     ================================================================== */
+  const stage = document.getElementById('stage');
+  const layers = {};
+  for (const [k,id] of [['track','c-track'],['ink','c-ink'],['car','c-car']]){
+    const el = document.getElementById(id);
+    layers[k] = { el, ctx: el.getContext('2d') };
+  }
+  let scale = 1, offX = 0, offY = 0, rotated = false;
+
+  function resize(){
+    const r = stage.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    /* A 1000x580 circuit in a tall phone window leaves most of the screen
+       empty. Turning the world 90 degrees fills it. Steering still reads
+       correctly because it's relative to the car, not the page. */
+    rotated = ROTATE_PORTRAIT && r.height > r.width;
+    const fitW = rotated ? DH : DW;
+    const fitH = rotated ? DW : DH;
+
+    /* Turned sideways the circuit is almost exactly the shape of the stage,
+       so without this it fills every pixel and the clock, the splits and the
+       practice badge all end up sitting on the track. Reserving a band at the
+       top and a hairline at the edges gives them somewhere to live. The scale
+       stays uniform — the circuit is never stretched, only inset. */
+    const band = rotated ? Math.min(82, r.height*0.125) : 0;
+    const edge = rotated ? Math.min(14, r.width*0.04) : 0;
+    const availW = r.width  - edge*2;
+    const availH = r.height - band - edge;
+
+    scale = Math.min(availW/fitW, availH/fitH);
+    offX = edge + (availW - fitW*scale)/2;
+    offY = band + (availH - fitH*scale)/2;
+
+    for (const k in layers){
+      const {el, ctx} = layers[k];
+      el.width  = Math.round(r.width*dpr);
+      el.height = Math.round(r.height*dpr);
+      if (rotated){
+        ctx.setTransform(0, dpr*scale, -dpr*scale, 0, dpr*(offX + DH*scale), dpr*offY);
+      } else {
+        ctx.setTransform(dpr*scale, 0, 0, dpr*scale, dpr*offX, dpr*offY);
+      }
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+    }
+    drawTrack(reveal);
+  }
+
+  function strokePoly(ctx, pts, count, w, alpha, color = INK){
+    if (count < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < count; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    if (count >= pts.length) ctx.closePath();
+    ctx.globalAlpha = alpha; ctx.lineWidth = w; ctx.strokeStyle = color;
+    ctx.stroke(); ctx.globalAlpha = 1;
+  }
+
+  function drawTrack(r){
+    const {el, ctx} = layers.track;
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,el.width,el.height); ctx.restore();
+    const count = Math.max(2, Math.floor(N*r));
+    ctx.setLineDash([6,14]);
+    strokePoly(ctx, PATH, count, 0.9, .22);
+    ctx.setLineDash([]);
+    strokePoly(ctx, OUTER, count, 1.9, .88);
+    strokePoly(ctx, INNER, count, 1.9, .88);
+    if (r >= 1){ drawSectorLines(ctx); drawStartLine(ctx); }
+  }
+
+  /* Sector boundaries: a dashed beam across the track with a short post just
+     outside each edge, so it reads as a timing marker rather than a stray
+     line. Quieter than the red start/finish hatching by design. */
+  function drawSectorLines(ctx){
+    ctx.strokeStyle = INK;
+    ctx.globalAlpha = .38;
+    for (const f of CHECKPOINTS){
+      const i = Math.floor(N*f);
+      const p = PATH[i], nrm = NORMALS[i];
+      const reach = HALF_W + 1.5;
+
+      // the beam is a fine measuring line, not a road marking
+      ctx.globalAlpha = .26;
+      ctx.setLineDash([2,5]);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(p[0] - nrm[0]*reach, p[1] - nrm[1]*reach);
+      ctx.lineTo(p[0] + nrm[0]*reach, p[1] + nrm[1]*reach);
+      ctx.stroke();
+
+      // the posts carry the meaning, so they read solid
+      ctx.globalAlpha = .7;
+      ctx.setLineDash([]);
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      for (const side of [1,-1]){
+        const ex = p[0] + nrm[0]*reach*side, ey = p[1] + nrm[1]*reach*side;
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(ex + nrm[0]*side*9, ey + nrm[1]*side*9);
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.setLineDash([]);
+  }
+  function drawStartLine(ctx){
+    const p = PATH[0], nrm = NORMALS[0];
+    ctx.strokeStyle = RED; ctx.lineWidth = 1.5;
+    for (let i = -8; i <= 8; i++){
+      const t = i/8;
+      const cx = p[0] + nrm[0]*HALF_W*t, cy = p[1] + nrm[1]*HALF_W*t;
+      const tx = -nrm[1], ty = nrm[0];
+      ctx.beginPath();
+      ctx.moveTo(cx - tx*4, cy - ty*4);
+      ctx.lineTo(cx + tx*4, cy + ty*4);
+      ctx.stroke();
+    }
+  }
+
+  /* ==================================================================
+     Ink — the trail is drawn from what the sim reports, never simulated
+     ================================================================== */
+  function layTrail(x0, y0, x1, y1){
+    const car = sim.car;
+    const v = Math.abs(car.spd);
+    if (v < 8) return;
+    const ctx = layers.ink.ctx;
+    ctx.globalAlpha = 0.09 + Math.min(.13, car.slip/900);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 0.7 + 2.0*(1 - Math.min(1, v/MAX_SPD)) + Math.min(2.4, car.slip/55);
+    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  function scuff(x, y, ox, oy, strength){
+    const ctx = layers.ink.ctx;
+    const tx = -oy, ty = ox, len = 5 + 16*strength;
+    ctx.globalAlpha = .18 + .32*strength;
+    ctx.strokeStyle = RED;
+    ctx.lineWidth = 1 + 1.5*strength;
+    for (let i = -1; i <= 1; i++){
+      const j = i*2.4;
+      ctx.beginPath();
+      ctx.moveTo(x - tx*len/2 + ox*j, y - ty*len/2 + oy*j);
+      ctx.lineTo(x + tx*len/2 + ox*j, y + ty*len/2 + oy*j);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+  function clearInk(){
+    const {el, ctx} = layers.ink;
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,el.width,el.height); ctx.restore();
+  }
+
+  /* ==================================================================
+     Transient effects — quick flourishes that live on the car layer (which
+     clears every frame) and fade on their own, unlike the permanent scuff on
+     the ink layer. Each carries the wall-clock time it was born; the draw
+     step removes it once its life runs out.
+     ================================================================== */
+  const fx = [];
+  const nowMs = () => performance.now();
+
+  /* Bursts and sweeps are decorative — the contact count, banners and splits
+     carry the same information. Someone who has asked for reduced motion gets
+     the information without the movement. */
+  function addImpact(x, y, ox, oy, strength){
+    if (REDUCED_MOTION) return;
+    fx.push({ kind:'impact', born:nowMs(), life:340, x, y, ox, oy, s:strength });
+  }
+  function addSectorFlash(index){
+    if (REDUCED_MOTION) return;
+    fx.push({ kind:'sector', born:nowMs(), life:300, index });
+  }
+
+  /* Nose of the car, in design units — centre plus half a car-length along
+     the heading. CAR_L is the half-length the sim uses for collision. */
+  const CAR_L = 20;
+  const nosePos = (x, y, h) => [x + Math.cos(h)*CAR_L, y + Math.sin(h)*CAR_L];
+
+  /* Each sector line as a point on the loop plus the forward tangent there.
+     A nose crossing is the dot product of (nose - linePoint) with the tangent
+     flipping from negative to positive. */
+  const SECTOR_LINES = CHECKPOINTS.map(f => {
+    const i = Math.floor(N*f);
+    const a = PATH[(i-1+N)%N], b = PATH[(i+1)%N];
+    const tx = b[0]-a[0], ty = b[1]-a[1], l = Math.hypot(tx,ty) || 1;
+    return { i, p: PATH[i], tx: tx/l, ty: ty/l };
+  });
+  let sectorSide = SECTOR_LINES.map(() => null);
+
+  function checkSectorCrossings(before, after){
+    for (let k = 0; k < SECTOR_LINES.length; k++){
+      const s = SECTOR_LINES[k];
+      const d1 = (before[0]-s.p[0])*s.tx + (before[1]-s.p[1])*s.ty;
+      const d2 = (after[0]-s.p[0])*s.tx + (after[1]-s.p[1])*s.ty;
+      // only a forward crossing near the gate counts, so a distant part of
+      // the loop with the same tangent sign can't trigger it
+      const near = Math.hypot(after[0]-s.p[0], after[1]-s.p[1]) < HALF_W*2;
+      if (near && d1 < 0 && d2 >= 0 && sectorSide[k] !== 'past'){
+        addSectorFlash(k);
+        audioSector(k);
+        sectorSide[k] = 'past';
+      }
+    }
+  }
+
+  /* Restart the CSS animation on the contact banner. Setting the property to
+     none, forcing a reflow, then clearing it is the standard way to replay a
+     keyframe animation that may already be running from the previous hit. */
+  /* Banners are hidden on a timer as well as by the animation, so they behave
+     the same whether or not motion is allowed. */
+  const bannerTimers = new WeakMap();
+  function flashBanner(el, ms){
+    el.hidden = false;
+    clearTimeout(bannerTimers.get(el));
+    if (!REDUCED_MOTION){
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = '';
+    }
+    bannerTimers.set(el, setTimeout(() => { el.hidden = true; }, ms));
+  }
+  function flashContact(){ flashBanner(ui.contact, 900); }
+
+  function drawEffects(){
+    if (!fx.length) return;
+    const ctx = layers.car.ctx;
+    const t = nowMs();
+    for (let k = fx.length - 1; k >= 0; k--){
+      const e = fx[k];
+      const p = (t - e.born) / e.life;         // 0..1 over the effect's life
+      if (p >= 1){ fx.splice(k, 1); continue; }
+
+      if (e.kind === 'impact'){
+        // a small star of spokes bursting outward from the contact point,
+        // longer and more opaque the harder the hit
+        const reach = (7 + 22*e.s) * (0.4 + 0.6*p);
+        ctx.globalAlpha = (1 - p) * (0.5 + 0.4*e.s);
+        ctx.strokeStyle = RED;
+        ctx.lineWidth = 1.4;
+        const spokes = 5;
+        for (let i = 0; i < spokes; i++){
+          const a = (i/spokes)*Math.PI*2 + e.s*3;
+          const dx = Math.cos(a), dy = Math.sin(a);
+          const r0 = reach*0.35, r1 = reach;
+          ctx.beginPath();
+          ctx.moveTo(e.x + dx*r0, e.y + dy*r0);
+          ctx.lineTo(e.x + dx*r1, e.y + dy*r1);
+          ctx.stroke();
+        }
+      } else {
+        // a checkered beam sweeping across the track at the sector line,
+        // brightest as it passes then fading out
+        const i = Math.floor(N * CHECKPOINTS[e.index]);
+        const c = PATH[i], nrm = NORMALS[i];
+        const tang = [-nrm[1], nrm[0]];        // along the track
+        const sweep = (p - 0.5) * 26;          // the beam slides along briefly
+        const fade = Math.sin(Math.min(1, p)*Math.PI);   // in then out
+        const squares = 9, cell = (HALF_W*2) / squares;
+        ctx.globalAlpha = fade * 0.85;
+        for (let s = 0; s < squares; s++){
+          if (s % 2) continue;                 // every other cell = checker
+          const d0 = -HALF_W + s*cell, d1 = d0 + cell;
+          const bx = c[0] + tang[0]*sweep, by = c[1] + tang[1]*sweep;
+          const w = 4.5;
+          ctx.fillStyle = INK;
+          ctx.beginPath();
+          ctx.moveTo(bx + nrm[0]*d0 - tang[0]*w, by + nrm[1]*d0 - tang[1]*w);
+          ctx.lineTo(bx + nrm[0]*d1 - tang[0]*w, by + nrm[1]*d1 - tang[1]*w);
+          ctx.lineTo(bx + nrm[0]*d1 + tang[0]*w, by + nrm[1]*d1 + tang[1]*w);
+          ctx.lineTo(bx + nrm[0]*d0 + tang[0]*w, by + nrm[1]*d0 + tang[1]*w);
+          ctx.closePath(); ctx.fill();
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /* ==================================================================
+     The car, drawn between ticks
+     ================================================================== */
+  /* Interpolated pose for any sim, between its last tick and the next. */
+  function poseOf(s, alpha){
+    const car = s.car, prev = s.prev;
+    const a = alpha === undefined ? 1 : Math.max(0, Math.min(1, alpha));
+    let dh = car.h - prev.h;
+    while (dh >  Math.PI) dh -= Math.PI*2;
+    while (dh < -Math.PI) dh += Math.PI*2;
+    return {
+      x: prev.x + (car.x - prev.x)*a,
+      y: prev.y + (car.y - prev.y)*a,
+      h: prev.h + dh*a
+    };
+  }
+
+  /* One body, two liveries. The ghost is the same car drawn hollow and faint
+     so it reads as a tracing of a lap rather than a second competitor —
+     yours is always the solid one. */
+  function paintCar(ctx, pose, ghostly, opacity){
+    const op = opacity === undefined ? 1 : opacity;
+    if (op <= 0) return;
+    ctx.save();
+    ctx.translate(pose.x, pose.y);
+    ctx.rotate(pose.h);
+    /* Full-strength stroke for the ghost too — it reads as secondary through
+       hue and the dashed line, not through being washed out. Fading it as well
+       made it vanish the moment the two cars overlapped. */
+    ctx.globalAlpha = op;
+    ctx.strokeStyle = ghostly ? GHOST : INK;
+    ctx.fillStyle = ghostly ? 'rgba(243,238,227,0.55)' : PAPER;
+    ctx.lineWidth = ghostly ? 1.3 : 1.5;
+    if (ghostly) ctx.setLineDash([4,3]);
+
+    for (const [wx,wy] of [[10,-10.4],[10,10.4],[-10,-10.4],[-10,10.4]])
+      rounded(ctx, wx-5, wy-2.6, 10, 5.2, 1.6);
+
+    // rear wing solid: at twenty pixels a dark tail is the one cue that survives
+    /* Solid rear wing — the one cue for which way a car is pointing at this
+       size. The ghost gets it in its own colour rather than losing it. */
+    ctx.fillStyle = ghostly ? GHOST : INK;
+    rounded(ctx, -20, -9, 4.5, 18, 1);
+    ctx.fillStyle = ghostly ? 'rgba(243,238,227,0.55)' : PAPER;
+
+    ctx.beginPath();
+    ctx.moveTo(17, 0);
+    ctx.lineTo(6, -4.4); ctx.lineTo(-2, -6.4); ctx.lineTo(-13, -6);
+    ctx.lineTo(-16, -3); ctx.lineTo(-16, 3); ctx.lineTo(-13, 6);
+    ctx.lineTo(-2, 6.4); ctx.lineTo(6, 4.4);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+
+    for (const sd of [-1,1]) rounded(ctx, -12, sd>0 ? 5 : -10.5, 12, 5.5, 1.6);
+    ctx.beginPath(); ctx.ellipse(-1,0,3.4,2.5,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    rounded(ctx, 15, -11, 4, 22, 1);
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  function drawCar(alpha){
+    const ctx = layers.car.ctx;
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,layers.car.el.width, layers.car.el.height); ctx.restore();
+
+    // ghost underneath, so your car is never hidden by it
+    const gop = ghostOpacity();
+    if (gop > 0){
+      /* A finished ghost has stopped stepping, so its prev and car are a
+         tick apart and frozen. Interpolating with the player's alpha would
+         make it jitter between the two — draw it settled instead. */
+      paintCar(ctx, poseOf(ghost.sim, ghost.done ? 1 : alpha), true, gop);
+    }
+    paintCar(ctx, poseOf(sim, alpha), false, 1);
+  }
+  function rounded(ctx,x,y,w,h,r){
+    ctx.beginPath(); ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y, x+w,y+h, r); ctx.arcTo(x+w,y+h, x,y+h, r);
+    ctx.arcTo(x,y+h, x,y, r);     ctx.arcTo(x,y, x+w,y, r);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+
+  /* ==================================================================
+     The ghost. A second sim on the same circuit, fed a recorded input
+     stream one tick at a time alongside yours. Because the physics is
+     deterministic and fixed-step, it retraces its original lap exactly —
+     no interpolation of stored positions, no drift.
+
+     Sources, in the order they're offered:
+       - a challenge link, when it's for today's circuit
+       - your own best practice lap
+     Later the trained bot becomes a third, and needs no new code here.
+     ================================================================== */
+  let ghost = null;      // { sim, inputs, tick, label, ticks, done }
+
+  function makeGhost(inputs, label, ticks, start){
+    lastGap = null;
+    return {
+      sim: createSim(track),
+      inputs,
+      tick: 0,
+      label,
+      ticks,               // its finishing tick count, for the gap readout
+      start: start || null,
+      done: false
+    };
+  }
+
+  function startGhost(){
+    if (!ghost) return;
+    ghost.sim.reset();
+    ghost.sim.start();
+    /* Seed after start(), which places the car on the grid — a lap recorded
+       mid-session began somewhere else entirely. */
+    if (ghost.start) ghost.sim.seedCar(ghost.start);
+    ghost.tick = 0;
+    ghost.done = false;
+    ghost.doneAt = 0;
+  }
+
+  /* One ghost tick per player tick, so the two stay in lockstep and the gap
+     on screen is a true time difference rather than an artefact of pacing. */
+  function stepGhost(){
+    if (!ghost || ghost.done) return;
+    if (ghost.tick >= ghost.inputs.length || ghost.sim.state !== 'running'){
+      ghost.done = true;
+      ghost.doneAt = nowMs();
+      return;
+    }
+    const px = ghost.sim.car.x, py = ghost.sim.car.y;
+    ghost.sim.step(ghost.inputs[ghost.tick++]);
+    layGhostTrail(px, py, ghost.sim.car.x, ghost.sim.car.y);
+  }
+
+  /* How solid the ghost should be drawn right now. Once its lap is over it
+     fades out over GHOST_FADE_MS rather than parking on the racing line,
+     where a stationary car reads as an obstacle. */
+  const REDUCED_MOTION = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const GHOST_FADE_MS = 900;
+  function ghostOpacity(){
+    if (!ghost || ghost.sim.state === 'grid') return 0;
+    if (!ghost.done) return 1;
+    const age = nowMs() - (ghost.doneAt || 0);
+    return Math.max(0, 1 - age / GHOST_FADE_MS);
+  }
+
+  /* The ghost inks too, but faintly — the racing line it drew is the useful
+     part, and a second dark trail would fight the player's own. */
+  function layGhostTrail(x0, y0, x1, y1){
+    const ctx = layers.ink.ctx;
+    ctx.globalAlpha = 0.09;
+    ctx.strokeStyle = GHOST;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,4]);
+    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+  }
+
+  /* Live gap, in seconds. Positive means the ghost is ahead of you. Compares
+     distance round the lap rather than elapsed time, which is what a real
+     timing screen shows and what actually tells you if you're gaining. */
+  function ghostGap(){
+    if (!ghost || !isDriving()) return null;
+    if (ghost.done) return lastGap;      // it has finished; hold the final gap
+    const mine  = sim.nearest(sim.car.x, sim.car.y).i;
+    const theirs = ghost.sim.nearest(ghost.sim.car.x, ghost.sim.car.y).i;
+    let d = mine - theirs;
+    if (d >  N/2) d -= N;
+    if (d < -N/2) d += N;
+    // convert a sample lead into seconds using the player's current pace
+    const pace = Math.max(40, Math.abs(sim.car.spd));   // units per second
+    return -(d * track.spacing) / pace;
+  }
+
+  let lastGap = null;
+  let wrongWayWasOn = false;
+  function paintGap(){
+    const g = ghostGap();
+    if (g !== null && ghost && !ghost.done) lastGap = g;
+    const has = g !== null;
+    ui.gap.hidden = ui.gapL.hidden = !has;
+    if (!has) return;
+    ui.gap.textContent = (g <= 0 ? '\u2212' : '+') + Math.abs(g).toFixed(2);
+    ui.gap.style.color = g <= 0 ? '' : 'var(--red)';
+  }
+
+  let uiState = 'grid';            // grid | running | done | locked
+                                   // practice-grid | practice-running
+  /* Practice never touches the daily result. `mode` decides which lifecycle
+     a finished lap goes through; the stored daily lap is written once, on the
+     official run, and is never rewritten. */
+  let mode = 'daily';
+  /* Every lap driven since the page loaded, official one first. Times and
+     splits only — no input streams, so this is a scoreboard rather than
+     research data, and it is kept whatever the consent setting says. */
+  let sessionLaps = [];
+  const MAX_SESSION_LAPS = 60;
+
+  let practiceBest = null;         // ticks
+  let practiceBestInputs = null;   // packed, so the best lap can be a ghost
+  let practiceBestStart = null;    // where that lap began — laps roll on, so
+                                   // most of them start flying, not on the grid
+  let lapStartState = null;
+  let lastLapTicks = null;         // ticks, most recent completed practice lap
+  let practiceCount = 0;
+  let dailyResult = null;          // remembered so we can restore the card
+  let modalOpen = false;           // driving is blocked while any card is up
+  /* Whichever button Space or Enter should press while a card is up. Set when
+     a card opens so the keyboard can dismiss it without hunting for focus. */
+  let modalPrimary = null;
+  let practicePaused = false;
+  let retireArmed = false;
+  let research = null;             // null = not yet asked, then true/false
+  let reveal = matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 0;
+  let trackDone = false;
+  let acc = 0;
+  const inputLog = [];             // one nibble per tick: this is the ghost
+
+  const ui = {
+    warn:     document.getElementById('warn'),
+    contact:  document.getElementById('contact'),
+    lapflash: document.getElementById('lapflash'),
+    splits:   document.getElementById('r-splits'),
+    sp:       [1,2,3].map(k => document.getElementById('sp-' + k)),
+    rules:    document.getElementById('rules'),
+    rulesGo:  document.getElementById('rules-go'),
+    rulesCtl: document.getElementById('rules-controls'),
+    retire:   document.getElementById('btn-retire'),
+    back:     document.getElementById('btn-back'),
+    restart:  document.getElementById('btn-restart'),
+    practice: document.getElementById('btn-practice'),
+    stats:      document.getElementById('btn-stats'),
+    statsCard:  document.getElementById('stats'),
+    statsRows:  document.getElementById('stats-rows'),
+    statsSum:   document.getElementById('stats-summary'),
+    statsNote:  document.getElementById('stats-note'),
+    statsClose: document.getElementById('stats-close'),
+    pracNote: document.getElementById('practice-note'),
+    badge:    document.getElementById('badge'),
+    best:     document.getElementById('r-best'),
+    bestL:    document.getElementById('r-best-l'),
+    last:     document.getElementById('r-last'),
+    lastL:    document.getElementById('r-last-l'),
+    reset:    document.getElementById('btn-reset'),
+    consent:  document.getElementById('consent'),
+    cMore:    document.getElementById('c-more'),
+    cToggle:  document.getElementById('c-toggle'),
+    cYes:     document.getElementById('c-yes'),
+    cNo:      document.getElementById('c-no'),
+    research: document.getElementById('btn-research'),
+    time:    document.getElementById('r-time'),
+    hits:    document.getElementById('r-hits'),
+    prompt:  document.getElementById('prompt'),
+    result:  document.getElementById('result'),
+    resHead: document.getElementById('res-head'),
+    resTime: document.getElementById('res-time'),
+    resSub:  document.getElementById('res-sub'),
+    glyphs:  document.getElementById('res-glyphs'),
+    shareTx: document.getElementById('res-text'),
+    share:   document.getElementById('btn-share'),
+    challenge: document.getElementById('btn-challenge'),
+    chCard:  document.getElementById('challenge'),
+    chTime:  document.getElementById('ch-time'),
+    chSub:   document.getElementById('ch-sub'),
+    chBody:  document.getElementById('ch-body'),
+    chGo:    document.getElementById('ch-go'),
+    target:  document.getElementById('r-target'),
+    gap:     document.getElementById('r-gap'),
+    gapL:    document.getElementById('r-gap-l'),
+    ghostBtn: document.getElementById('btn-ghost'),
+    sound:    document.getElementById('btn-sound'),
+    targetL: document.getElementById('r-target-l'),
+    daynum:  document.getElementById('daynum')
+  };
+
+  /* Recorded with every lap. Input method is the one that matters — a touch
+     player and a keyboard player may not be equally fast, and without this
+     field a cross-platform comparison is silently confounded. The rest is
+     cheap context that also affects how the car handles or is seen. */
+  function deviceContext(){
+    return {
+      /* Where the circuit came from, and whether the lap belongs in the
+         research sample. A real circuit is one many players have watched on
+         television, so prior familiarity is an uncontrolled variable — those
+         days are recorded but held out of analysis rather than discarded,
+         since they double as a test of transfer to human-designed geometry. */
+      track: track.source,
+      trackName: track.name || undefined,
+      heldOut: track.source !== 'generated',
+      input: inputMethod(),
+      coarse: matchMedia('(pointer:coarse)').matches,
+      portrait: rotated,
+      dpr: Math.min(window.devicePixelRatio || 1, 2)
+    };
+  }
+
+  /* ==================================================================
+     Ghost links. A whole lap fits in a URL — the packed input stream is a
+     few hundred URL-safe characters — so a challenge can travel with no
+     backend at all. The recipient's browser replays the stream to work out
+     the time, which means a tampered link is rejected rather than believed.
+     ================================================================== */
+  const GHOST_PARAM = 'g', GHOST_DAY_PARAM = 'd';
+
+  function buildGhostURL(packed, day){
+    const u = new URL(SHARE_URL);
+    u.searchParams.set(GHOST_PARAM, packed);
+    u.searchParams.set(GHOST_DAY_PARAM, String(day));
+    return u.toString();
+  }
+
+  /* An incoming challenge, once verified: { ticks, hits, day, sameTrack }. */
+  let challenge = null;
+  let challengeInputs = null;      // decoded stream, so it can be raced
+
+  function readGhostFromURL(){
+    const q = new URLSearchParams(location.search);
+    const packed = q.get(GHOST_PARAM);
+    const dayRaw = q.get(GHOST_DAY_PARAM);
+    if (!packed || dayRaw === null) return null;
+    const day = parseInt(dayRaw, 10);
+    if (!Number.isInteger(day)) return { broken: true, corrupt: false };
+    try {
+      /* Replaying is the verification: the time comes out of the physics,
+         never out of the link, so there is nothing to forge. The checksum is
+         a separate, weaker guarantee — it only tells us the link survived
+         the trip intact. */
+      const r = verifyLap({ day, packed });
+      if (!r.ok) return { broken: true, corrupt: !!r.corrupt, reason: r.reason };
+      /* Keep the decoded stream: replaying it alongside the player is what
+         turns the challenge from a number into an opponent. */
+      try { challengeInputs = unpackInputs(packed).inputs; } catch (_){}
+      return { ticks: r.ticks, hits: r.hits, day, sameTrack: day === DAY };
+    } catch (_) {
+      return { broken: true, corrupt: false };
+    }
+  }
+
+  function paintTarget(){
+    const has = challenge && !challenge.broken && challenge.sameTrack;
+    ui.target.hidden = ui.targetL.hidden = !has;
+    if (has) ui.target.textContent = fmt(challenge.ticks * FIXED * 1000);
+  }
+
+  function showChallenge(){
+    if (challenge.broken){
+      ui.chTime.textContent = '\u2014';
+      ui.chSub.textContent = challenge.corrupt ? 'damaged link' : 'unreadable link';
+      ui.chBody.textContent = challenge.corrupt
+        ? 'The link didn\u2019t survive the trip \u2014 chat apps and mail clients sometimes cut long URLs short. Ask whoever sent it to share it again, or just drive today\u2019s circuit.'
+        : 'That link doesn\u2019t describe a lap we can read. Today\u2019s circuit is waiting either way.';
+      ui.chGo.textContent = 'Drive today\u2019s circuit';
+      modalOpen = true;
+      modalPrimary = ui.chGo;
+      ui.chCard.hidden = false;
+      ui.prompt.hidden = true;
+      return;
+    }
+    const ms = challenge.ticks * FIXED * 1000;
+    ui.chTime.textContent = fmt(ms);
+    ui.chSub.textContent = challenge.hits
+      ? challenge.hits + ' wall contact' + (challenge.hits > 1 ? 's' : '')
+      : 'a clean lap';
+    ui.chBody.textContent = challenge.sameTrack
+      ? 'That was set on today\u2019s circuit \u2014 the same one you\u2019re about to drive. You get one attempt.'
+      : 'That was set on a different day\u2019s circuit, so you can\u2019t race it directly. Today\u2019s track is a new one.';
+    modalOpen = true;
+    modalPrimary = ui.chGo;
+    ui.chCard.hidden = false;
+    ui.prompt.hidden = true;
+  }
+
+  /* Send your own lap as a challenge. Kept separate from "Share result"
+     because the two want different shapes: a result is three short lines for
+     a group chat, a challenge is one long link. */
+  ui.challenge.addEventListener('click', async () => {
+    if (!dailyResult || !dailyResult.packed || dailyResult.outcome !== 'done'){
+      ui.challenge.textContent = 'Finish a lap first';
+      setTimeout(() => { ui.challenge.textContent = 'Challenge a friend'; }, 2500);
+      return;
+    }
+    const url = buildGhostURL(dailyResult.packed, DAY);
+    const text = 'Beat my Ink Circuit lap: ' + fmt(dailyResult.ms) + '\n' + url;
+    if (navigator.share){
+      try { await navigator.share({ text }); return; }
+      catch (err){ if (err && err.name === 'AbortError') return; }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      ui.challenge.textContent = 'Link copied';
+      setTimeout(() => { ui.challenge.textContent = 'Challenge a friend'; }, 2500);
+    } catch (_){
+      ui.shareTx.value = text;
+      ui.shareTx.hidden = false;
+      ui.shareTx.select();
+    }
+  });
+
+  ui.chGo.addEventListener('click', async () => {
+    ui.chCard.hidden = true;
+    modalOpen = false;
+    modalPrimary = null;
+    paintTarget();
+    chooseGhost();
+    /* The rules card still has to come first for anyone who has never
+       played, otherwise a challenge link is someone's first experience and
+       they spend their one attempt learning the controls. */
+    const seenRules = await loadKey(RULES_KEY);
+    if (!seenRules) showRules();
+    else if (RESEARCH_ENABLED && research === null) showConsent();
+    else if (uiState === 'grid') ui.prompt.hidden = false;
+  });
+
+  /* Screen reader announcements. Deliberately sparse: a clock that changes
+     sixty times a second would be unusable if it were live, so only discrete
+     events go here. Re-announcing the same string is a no-op for most screen
+     readers, hence the nudge with a zero-width space. */
+  let lastSpoken = '';
+  function say(msg){
+    const el = document.getElementById('sr-status');
+    if (!el) return;
+    el.textContent = msg === lastSpoken ? msg + '\u200B' : msg;
+    lastSpoken = msg;
+  }
+
+  const fmt = ms => {
+    const m = Math.floor(ms/60000), s = (ms%60000)/1000;
+    return m + ':' + (s<10?'0':'') + s.toFixed(2);
+  };
+
+  /* One mark per wall touched. The line above states the number, so the
+     symbol never needs a legend. */
+  function marks(h){
+    if (!h) return '';
+    const shown = Math.min(h, 12);
+    return '\u2715'.repeat(shown) + (h > shown ? ' +' + (h-shown) : '');
+  }
+  function shareText(ms, h, outcome = 'done'){
+    const head = PUZZLE > 0 ? 'Ink Circuit #' + PUZZLE : 'Ink Circuit — preview';
+    const line = outcome === 'done'
+      ? fmt(ms) + ' \u2014 ' + (h ? h + ' wall contact' + (h>1?'s':'') : 'clean lap')
+      : (outcome === 'retired' ? 'retired' : 'did not finish') +
+        (h ? ' \u2014 ' + h + ' wall contact' + (h>1?'s':'') : '');
+    return [head, line, marks(h), SHARE_URL].filter(Boolean).join('\n');
+  }
+
+  /* ------------------------------------------------------------------
+     Consent. Asked once, on first visit, before anyone has driven.
+     Asking after a run would tie consent to how well the run went, which
+     biases the sample in a way no later analysis can repair.
+     ------------------------------------------------------------------ */
+  function showConsent(){
+    if (!RESEARCH_ENABLED){ modalOpen = false; return; }
+    modalOpen = true;
+    modalPrimary = ui.cYes;
+    ui.consent.hidden = false;
+    ui.prompt.hidden = true;
+  }
+  async function answerConsent(yes){
+    research = yes;
+    modalOpen = false;
+    modalPrimary = null;
+    ui.consent.hidden = true;
+    if (uiState === 'grid') ui.prompt.hidden = false;
+    await saveKey(CONSENT_KEY, { v: CONSENT_VERSION, research: yes, at: new Date().toISOString() });
+    paintResearchLink();
+  }
+  function paintResearchLink(){
+    ui.research.hidden = !RESEARCH_ENABLED || research === null;
+    ui.research.textContent = 'Research: ' + (research ? 'on' : 'off');
+  }
+  ui.cYes.addEventListener('click', () => answerConsent(true));
+  ui.cNo.addEventListener('click',  () => answerConsent(false));
+  ui.cToggle.addEventListener('click', e => {
+    e.preventDefault();
+    ui.cMore.hidden = !ui.cMore.hidden;
+    ui.cToggle.textContent = ui.cMore.hidden ? 'What this means in full' : 'Show less';
+  });
+  ui.research.addEventListener('click', () => {
+    if (research) {
+      /* Withdrawal deletes what was already collected. Only report success
+         once the server confirms it — never claim a deletion that failed. */
+      answerConsent(false);
+      // TODO: await fetch('/api/withdraw', { method:'POST', ... })
+    } else {
+      showConsent();
+    }
+  });
+
+  /* Rules first, before anyone can spend their one attempt finding out that
+     down is the brake. */
+  function showRules(){
+    modalOpen = true;
+    modalPrimary = ui.rulesGo;
+    ui.rules.hidden = false;
+    ui.prompt.hidden = true;
+    if (matchMedia('(pointer:coarse)').matches)
+      ui.rulesCtl.textContent = 'Use the controls below the track to steer, accelerate and brake.';
+  }
+  ui.rulesGo.addEventListener('click', async () => {
+    ui.rules.hidden = true;
+    modalOpen = false;
+    modalPrimary = null;
+    await saveKey(RULES_KEY, { seen: true, at: new Date().toISOString() });
+    if (RESEARCH_ENABLED && research === null) showConsent();
+    else if (uiState === 'grid') ui.prompt.hidden = false;
+  });
+
+  /* Retire is two-step, because one stray click should not end the only
+     attempt of the day. */
+  ui.retire.addEventListener('click', () => {
+    if (uiState !== 'running') return;
+    if (!retireArmed){
+      disarmReset();
+      retireArmed = true;
+      ui.retire.textContent = 'Retire — sure?';
+      setTimeout(() => {
+        if (!retireArmed) return;
+        retireArmed = false;
+        ui.retire.textContent = 'Retire';
+      }, 5000);
+      return;
+    }
+    sim.retire();
+    endRun('retired');
+  });
+
+  /* Reset — wipes today's stored lap and every game-owned setting, so
+     testing can begin from a truly clean slate on the same device without
+     touching the OS-level browser storage panel. Two-step confirm because a
+     single mis-tap would silently blow away the day's result. */
+  let resetArmed = false;
+
+  /* Any other deliberate action disarms Reset. Two adjacent buttons sitting
+     in a "— sure?" state at once is confusing, and here it's dangerous: the
+     armed one wipes the day's result. */
+  function disarmReset(){
+    if (!resetArmed) return;
+    resetArmed = false;
+    ui.reset.textContent = 'Reset';
+  }
+
+  ui.reset.addEventListener('click', async () => {
+    if (!resetArmed){
+      // clear the other armed button, so only one confirmation is ever live
+      if (retireArmed){ retireArmed = false; ui.retire.textContent = 'Retire'; }
+      resetArmed = true;
+      ui.reset.textContent = 'Reset — sure?';
+      setTimeout(() => {
+        if (!resetArmed) return;
+        resetArmed = false;
+        ui.reset.textContent = 'Reset';
+      }, 5000);
+      return;
+    }
+    /* Clear every key the game owns, across every backend it might be
+       using. Ignoring failures is deliberate: on file:// some browsers
+       block localStorage and the game already runs from in-memory `mem`,
+       which we clear directly. */
+    const keys = [KEY, CONSENT_KEY, RULES_KEY, PRACTICE_KEY, PRACTICE_LAPS_KEY];
+    for (const k of keys) delete mem[k];
+    try { for (const k of keys) localStorage.removeItem(k); } catch (_) {}
+    if (window.storage){
+      for (const k of keys) { try { await window.storage.delete(k); } catch (_) {} }
+    }
+    location.reload();
+  });
+
+  function startRun(){
+    if (modalOpen) return;
+    const fromGrid = uiState === 'grid' || uiState === 'practice-grid';
+    if (!fromGrid || !sim.start()) return;
+    /* startRun fires from inside the first input event, so whichever surface
+       triggered it has already been flagged — reset before that flag, not
+       after, or the first lap always reads 'none'. */
+    usedKeyboard = usedTouch = false;
+    disarmReset();
+    lapStartState = sim.carState();
+    startGhost();
+    clearInk();
+    inputLog.length = 0;
+    fx.length = 0;
+    sectorSide = SECTOR_LINES.map(() => null);
+    acc = 0;
+    uiState = mode === 'practice' ? 'practice-running' : 'running';
+    ui.hits.textContent = '0';
+    ui.time.textContent = '0:00.00';
+    ui.prompt.hidden = true;
+    say(mode === 'practice' ? 'Practice lap started.' : 'Lap started. Clock running.');
+    ui.retire.hidden = mode === 'practice';   // practice laps are free to abandon
+    ui.retire.textContent = 'Retire';
+    retireArmed = false;
+    paintSplits(null, 1, 0);
+  }
+
+  function endRun(outcome){
+    ui.gap.hidden = ui.gapL.hidden = true;
+    if (mode === 'practice') return endPracticeRun(outcome);
+
+    /* Crossing the line on the one attempt that counts deserves the chime
+       too — and the tyres must stop, since the loop keeps running until told
+       otherwise. */
+    if (outcome === 'done') audioLap(true);
+    if (soundOn && fx_audio) fx_audio.silence(audioCtx.currentTime);
+
+    uiState = 'done';
+    retireArmed = false;
+    ui.retire.hidden = true;
+    ui.warn.hidden = true;
+    ui.contact.hidden = true;
+    paintSplits(sim.sectorTicks);
+    const ms = sim.elapsedMs(), h = sim.hits;
+    ui.time.textContent = fmt(ms);
+    const packed = packInputs(inputLog);
+    dailyResult = { ms, hits: h, outcome, splits: sim.sectorTicks, packed, ticks: sim.ticks };
+    recordSessionLap({ ticks: sim.ticks, splits: sim.sectorTicks, hits: h,
+                       outcome, official: true });
+    showResult(ms, h, false, outcome);
+    save({
+      day: DAY,
+      sim: ACTIVE_VERSION,
+      ticks: sim.ticks,
+      ms, hits: h,
+      sectors: sim.sectorHits,
+      splits: sim.sectorTicks,
+      inputs: packed,                  // the ghost, a few hundred characters
+      /* Storage happens either way — it's what makes one attempt a day real.
+         This field only decides whether the lap may be analysed, and only
+         exists once there's a consent flow to justify it. */
+      outcome,
+      ...deviceContext(),
+      ...(RESEARCH_ENABLED ? { research } : {})
+    });
+  }
+
+  /* ==================================================================
+     Practice mode. Same circuit, unlimited attempts, no share and no effect
+     whatsoever on the day's stored result. Unlocked only once the official
+     lap is done, so it can never be used to scout the track first.
+     ================================================================== */
+  function endPracticeRun(outcome){
+    retireArmed = false;
+    ui.retire.hidden = true;
+    ui.warn.hidden = true;
+    ui.contact.hidden = true;
+    const ms = sim.elapsedMs();
+
+    if (outcome === 'done'){
+      practiceCount++;
+      const improved = practiceBest === null || sim.ticks < practiceBest;
+      if (improved){
+        practiceBest = sim.ticks;
+        practiceBestStart = lapStartState;
+        /* Kept so your best lap can be raced as a ghost. This is a save file,
+           not research data — it lives under the practice key and is stored
+           regardless of consent, exactly like the daily result. */
+        practiceBestInputs = packInputs(inputLog);
+      }
+      lastLapTicks = sim.ticks;
+      recordSessionLap({ ticks: sim.ticks, splits: sim.sectorTicks,
+                         hits: sim.hits, outcome, official: false });
+      paintBest();
+      saveKey(PRACTICE_KEY, {
+        day: DAY, best: practiceBest, count: practiceCount,
+        bestInputs: practiceBestInputs, bestStart: practiceBestStart
+      });
+      recordPracticeLap(outcome);
+      flashLap(improved);
+      audioLap(improved);
+      say('Lap ' + fmt(ms) + (improved ? '. Your best yet.' : '.'));
+
+      /* Straight into the next lap, carrying speed across the line. The
+         player keeps circulating until they choose to stop, which is what a
+         practice session actually is. */
+      sectorSide = SECTOR_LINES.map(() => null);
+      inputLog.length = 0;
+      sim.continueLap();
+      lapStartState = sim.carState();
+      /* A new best replaces the ghost, so from the next lap you are chasing
+         the time you just set rather than the one before it. Rebuilt here,
+         between laps, so the ghost never changes mid-corner. */
+      if (improved) chooseGhost();
+      /* Practice circulates, so the ghost restarts with each of your laps —
+         it's there to pace you, and a ghost running on its own schedule would
+         drift out of phase until the gap meant nothing. On the daily run there
+         is no next lap, so the ghost simply finishes and fades. */
+      startGhost();
+      paintSplits(null, 1, 0);
+      ui.time.textContent = '0:00.00';
+      ui.hits.textContent = '0';
+      return true;                 // still running
+    }
+
+    /* Out of time, or otherwise stopped — back to the grid for a fresh start. */
+    recordSessionLap({ ticks: sim.ticks, splits: sim.sectorTicks,
+                       hits: sim.hits, outcome, official: false });
+    paintSplits(sim.sectorTicks);
+    ui.time.textContent = fmt(ms);
+    uiState = 'practice-grid';
+    sim.reset();
+    ui.prompt.hidden = false;
+    ui.prompt.textContent = 'Lap abandoned — go again';
+    return false;
+  }
+
+  /* Practice laps are the volume source for behavioural cloning: one official
+     lap a day is thin, but a session of practice is many labelled runs. They
+     are only kept when the player has actively consented to research. */
+  async function recordPracticeLap(outcome){
+    if (!RESEARCH_ENABLED || research !== true) return;
+    try {
+      const prev = (await loadKey(PRACTICE_LAPS_KEY)) || { day: DAY, laps: [] };
+      const laps = prev.day === DAY ? prev.laps : [];
+      laps.push({
+        sim: ACTIVE_VERSION,
+        ticks: sim.ticks,
+        hits: sim.hits,
+        splits: sim.sectorTicks,
+        inputs: packInputs(inputLog),
+        outcome,
+        ...deviceContext(),
+        at: new Date().toISOString()
+      });
+      // keep only the most recent, so a long session can't fill storage
+      while (laps.length > MAX_STORED_PRACTICE_LAPS) laps.shift();
+      await saveKey(PRACTICE_LAPS_KEY, { day: DAY, mode: 'practice', laps });
+      // TODO: POST to /api/lap with mode:'practice' once the backend is live
+    } catch (_) { /* practice data is best-effort, never block the game */ }
+  }
+
+  function paintBest(){
+    const has = practiceBest !== null;
+    ui.best.hidden = ui.bestL.hidden = !has;
+    if (has) ui.best.textContent = fmt(practiceBest * FIXED * 1000);
+    const hasLast = lastLapTicks !== null;
+    ui.last.hidden = ui.lastL.hidden = !hasLast;
+    if (hasLast) ui.last.textContent = fmt(lastLapTicks * FIXED * 1000);
+  }
+
+  /* A lap completed mid-session gets a banner rather than a card, since the
+     car is still moving and the player is still driving. */
+  function flashLap(improved){
+    ui.lapflash.textContent = (improved ? 'Best \u00B7 ' : 'Lap \u00B7 ') +
+      fmt(lastLapTicks * FIXED * 1000);
+    flashBanner(ui.lapflash, 1400);
+  }
+
+  /* Decide which ghost, if any, is available right now. The challenge always
+     wins when it's for today's circuit — it's the one someone asked you to
+     beat. Otherwise your own best practice lap. */
+  /* Every ghost you could race right now, best first. Your daily lap is what
+     makes a ghost available on the very first practice session — you have
+     just driven the circuit once, so there is always something to chase. */
+  function ghostSources(){
+    const out = [];
+    if (mode === 'practice'){
+      if (practiceBestInputs)
+        out.push({ key:'best', label:'best', packed:practiceBestInputs,
+                   ticks:practiceBest, start:practiceBestStart });
+      if (dailyResult && dailyResult.packed && dailyResult.outcome === 'done')
+        out.push({ key:'daily', label:'first lap', packed:dailyResult.packed,
+                   ticks:dailyResult.ticks, start:null });
+    }
+    if (challenge && !challenge.broken && challenge.sameTrack && challengeInputs)
+      out.push({ key:'challenge', label:'challenge', inputs:challengeInputs,
+                 ticks:challenge.ticks, start:null });
+    return out;
+  }
+
+  /* Which source is selected, or null for off. Kept as a key rather than an
+     index so it survives the list changing underneath it — which it does the
+     moment you set a first best. */
+  let ghostChoice = 'auto';
+
+  function chooseGhost(){
+    const sources = ghostSources();
+    if (!sources.length || ghostChoice === 'off'){ ghost = null; paintGhostButton(); return; }
+
+    let pick = sources.find(s => s.key === ghostChoice) || sources[0];
+    try {
+      const inputs = pick.inputs || unpackInputs(pick.packed).inputs;
+      ghost = makeGhost(inputs, pick.label, pick.ticks, pick.start);
+    } catch (_){
+      ghost = null;
+    }
+    paintGhostButton();
+  }
+
+  function paintGhostButton(){
+    const sources = ghostSources();
+    ui.ghostBtn.hidden = sources.length === 0;
+    ui.ghostBtn.textContent = 'Ghost: ' + (ghost ? ghost.label : 'off');
+  }
+
+  /* Cycles through whatever is available, then off, then round again. More
+     useful than a plain on/off once there are several laps worth racing. */
+  ui.ghostBtn.addEventListener('click', () => {
+    const sources = ghostSources();
+    if (!sources.length) return;
+    const order = sources.map(s => s.key).concat('off');
+    const current = ghost ? (sources.find(s => s.label === ghost.label) || {}).key : 'off';
+    const next = order[(order.indexOf(current) + 1) % order.length];
+    ghostChoice = next;
+    if (next === 'off'){
+      ghost = null;
+      ui.gap.hidden = ui.gapL.hidden = true;
+      paintGhostButton();
+    } else {
+      chooseGhost();
+      startGhost();          // so it joins in on the lap already underway
+    }
+  });
+
+  function enterPractice(){
+    disarmReset();
+    practicePaused = false;
+    ui.practice.textContent = 'Practice this track';
+    mode = 'practice';
+    sim = createSim(track);          // a fresh sim; the daily one is finished
+    clearInk();
+    fx.length = 0;
+    sectorSide = SECTOR_LINES.map(() => null);
+    inputLog.length = 0;
+    acc = 0;
+    uiState = 'practice-grid';
+    lastLapTicks = null;
+    ui.result.hidden = true;
+    ui.badge.hidden = false;
+    ui.back.hidden = false;
+    ui.restart.hidden = false;
+    ui.time.textContent = '0:00.00';
+    ui.hits.textContent = '0';
+    paintSplits(null, 1, 0);
+    paintBest();
+    ui.prompt.hidden = false;
+    ui.prompt.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'Tap a control to start'
+      : 'Arrows or WASD to start \u00b7 space pauses \u00b7 hold R to restart';
+    chooseGhost();
+  }
+
+  /* Space pauses a practice session and brings up your result card. The sim
+     is left exactly as it was, so resuming picks the lap back up mid-corner
+     rather than starting over — that's what makes it a pause rather than an
+     abandon. */
+  function pausePractice(){
+    if (mode !== 'practice' || uiState !== 'practice-running') return;
+    practicePaused = true;
+    uiState = 'practice-paused';
+    for (const k in keys) keys[k] = false;
+    ui.warn.hidden = true;
+    ui.contact.hidden = true;
+    ui.gap.hidden = ui.gapL.hidden = true;
+    if (soundOn && fx_audio) fx_audio.silence(audioCtx.currentTime);
+    say('Practice paused.');
+    if (dailyResult){
+      paintSplits(dailyResult.splits);
+      showResult(dailyResult.ms, dailyResult.hits, true, dailyResult.outcome);
+    } else {
+      ui.result.hidden = false;
+    }
+    ui.pracNote.hidden = false;
+    ui.pracNote.textContent = 'Practice paused mid-lap. Carry on where you left off, ' +
+      'or press Space again.';
+    ui.practice.textContent = 'Back to practice';
+  }
+
+  function resumePractice(){
+    practicePaused = false;
+    ui.result.hidden = true;
+    ui.practice.textContent = 'Practice this track';
+    uiState = 'practice-running';
+    acc = 0;
+    say('Practice resumed.');
+  }
+
+  function exitPractice(){
+    disarmReset();
+    practicePaused = false;
+    ui.practice.textContent = 'Practice this track';
+    mode = 'daily';
+    uiState = dailyResult ? 'done' : 'locked';
+    ui.badge.hidden = true;
+    ui.back.hidden = true;
+    ui.restart.hidden = true;
+    ui.retire.hidden = true;
+    ui.warn.hidden = true;
+    ui.contact.hidden = true;
+    ui.best.hidden = ui.bestL.hidden = true;
+    ui.last.hidden = ui.lastL.hidden = true;
+    ui.gap.hidden = ui.gapL.hidden = true;
+    ghost = null;
+    paintGhostButton();
+    ui.lapflash.hidden = true;
+    clearInk();
+    fx.length = 0;
+    if (dailyResult){
+      paintSplits(dailyResult.splits);
+      showResult(dailyResult.ms, dailyResult.hits, true, dailyResult.outcome);
+    } else {
+      ui.result.hidden = false;
+    }
+  }
+
+  /* Restart the current practice lap immediately. No confirmation and no
+     penalty — an abandoned practice lap costs nothing, which is the whole
+     point of the mode. Guarded to practice states so it can never touch the
+     one official attempt. */
+  function restartPracticeLap(){
+    if (mode !== 'practice') return;
+    disarmReset();
+    sim.reset();
+    clearInk();
+    fx.length = 0;
+    sectorSide = SECTOR_LINES.map(() => null);
+    inputLog.length = 0;
+    for (const k in keys) keys[k] = false;
+    acc = 0;
+    uiState = 'practice-grid';
+    ui.retire.hidden = true;
+    ui.warn.hidden = true;
+    ui.contact.hidden = true;
+    ui.time.textContent = '0:00.00';
+    ui.hits.textContent = '0';
+    ui.lapflash.hidden = true;
+    paintSplits(null, 1, 0);
+    ui.prompt.hidden = false;
+    ui.prompt.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'Tap a control to start'
+      : 'Press an arrow key to start';
+  }
+
+  ui.practice.addEventListener('click', () => {
+    if (practicePaused) resumePractice(); else enterPractice();
+  });
+  ui.back.addEventListener('click', exitPractice);
+  ui.restart.addEventListener('click', restartPracticeLap);
+
+  function recordSessionLap({ ticks, splits, hits, outcome, official }){
+    sessionLaps.push({
+      n: sessionLaps.length + 1, ticks, hits, outcome, official,
+      splits: (splits || []).slice()
+    });
+    /* A long practice session shouldn't grow without limit; the oldest laps
+       are the least interesting once you've improved past them. */
+    while (sessionLaps.length > MAX_SESSION_LAPS) sessionLaps.shift();
+    paintStatsButton();
+  }
+
+  function paintStatsButton(){
+    ui.stats.hidden = sessionLaps.length === 0;
+  }
+
+  const secs = ticks => (ticks * FIXED).toFixed(2);
+
+  /* The sum of your best each sector, which is almost always quicker than
+     your best actual lap — it's the lap you'd have driven if you'd strung
+     your best three together. Every racing timing screen shows it. */
+  function theoreticalBest(laps){
+    const best = [];
+    for (let k = 0; k < SECTORS; k++){
+      let b = Infinity;
+      for (const l of laps){
+        const v = l.splits[k];
+        if (l.outcome === 'done' && v != null && v < b) b = v;
+      }
+      if (b === Infinity) return null;
+      best.push(b);
+    }
+    return { total: best.reduce((a,b) => a+b, 0), sectors: best };
+  }
+
+  function renderStats(){
+    const laps = sessionLaps;
+    const done = laps.filter(l => l.outcome === 'done');
+    const bestLap = done.reduce((b, l) => !b || l.ticks < b.ticks ? l : b, null);
+    const theo = theoreticalBest(laps);
+    const contacts = laps.reduce((a, l) => a + l.hits, 0);
+
+    const cell = (label, value) =>
+      '<dt>' + label + '</dt><dd>' + value + '</dd>';
+    ui.statsSum.innerHTML =
+      cell('Laps', laps.length) +
+      cell('Contacts', contacts) +
+      cell('Best lap', bestLap ? fmt(bestLap.ticks * FIXED * 1000) : '\u2014') +
+      cell('Best possible', theo ? fmt(theo.total * FIXED * 1000) : '\u2014');
+
+    ui.statsRows.innerHTML = laps.map(l => {
+      const cls = [];
+      if (bestLap && l === bestLap) cls.push('best');
+      if (l.official) cls.push('attempt');
+      const cells = [];
+      for (let k = 0; k < SECTORS; k++){
+        const v = l.splits[k];
+        const top = theo && v != null && v === theo.sectors[k];
+        cells.push('<td class="' + (top ? 'top' : '') + '">' +
+                   (v == null ? '\u2014' : secs(v)) + '</td>');
+      }
+      const time = l.outcome === 'done'
+        ? '<td class="lap">' + fmt(l.ticks * FIXED * 1000) + '</td>'
+        : '<td class="dnf">' + (l.outcome === 'retired' ? 'retired' : 'no time') + '</td>';
+      return '<tr class="' + cls.join(' ') + '">' +
+        '<td>' + (l.official ? 'Attempt' : l.n) + '</td>' +
+        time + cells.join('') +
+        '<td class="' + (l.hits ? 'hits' : '') + '">' + (l.hits || '\u2014') + '</td></tr>';
+    }).join('');
+
+    ui.statsNote.textContent = theo && bestLap && theo.total < bestLap.ticks
+      ? 'Best possible is your quickest each sector added together \u2014 ' +
+        secs(bestLap.ticks - theo.total) + 's better than your best lap.'
+      : 'Underlined sectors are your quickest of the session.';
+  }
+
+  function showStats(){
+    renderStats();
+    statsReturn = !ui.result.hidden;
+    ui.result.hidden = true;
+    ui.statsCard.hidden = false;
+    modalOpen = true;
+    modalPrimary = ui.statsClose;
+  }
+  let statsReturn = false;
+  function hideStats(){
+    ui.statsCard.hidden = true;
+    modalOpen = false;
+    modalPrimary = null;
+    if (statsReturn) ui.result.hidden = false;
+  }
+  ui.stats.addEventListener('click', showStats);
+  ui.statsClose.addEventListener('click', hideStats);
+
+  const HEADINGS = { done:'Lap complete', retired:'Retired', dnf:'Out of time' };
+
+  /* Splits, in the order everyone already reads them. A completed sector
+     firms up; the one you're in ticks along live; the rest stay as dots.
+     No colour coding yet — purple and green only mean something against a
+     benchmark, and there's no ghost to compare with until the bot exists. */
+  function paintSplits(done, current = 0, liveTicks = 0){
+    ui.splits.hidden = false;
+    for (let k = 0; k < ui.sp.length; k++){
+      const row = ui.sp[k], val = row.querySelector('b');
+      const t = done && done[k] != null ? done[k] : null;
+      if (t != null){
+        val.textContent = (t*FIXED).toFixed(2);
+        row.className = 'sp set';
+      } else if (k === current - 1){
+        val.textContent = (liveTicks*FIXED).toFixed(2);
+        row.className = 'sp now';
+      } else {
+        val.textContent = '\u00B7';
+        row.className = 'sp';
+      }
+    }
+  }
+
+  function showResult(ms, h, wasEarlier, outcome = 'done'){
+    ui.resHead.textContent = wasEarlier ? "Today's lap" : (HEADINGS[outcome] || 'Lap complete');
+    ui.resTime.textContent = fmt(ms);
+    say(ui.resHead.textContent + '. ' + fmt(ms) + '. ' +
+        (h ? h + ' wall contact' + (h>1?'s':'') + '.' : 'Clean lap.'));
+    ui.resSub.textContent = outcome !== 'done'
+      ? (outcome === 'retired' ? 'you stopped before the line' : 'the lap ran out of time')
+      : (h ? h + ' wall contact' + (h>1?'s':'') : 'clean lap — not a mark on it');
+    ui.glyphs.textContent = marks(h);
+    ui.glyphs.hidden = !h;
+
+    /* Against an incoming challenge, the gap is the headline — it's the most
+       quotable number in racing. Only shown when the circuit matches. */
+    if (challenge && !challenge.broken && challenge.sameTrack && outcome === 'done'){
+      const gap = (ms - challenge.ticks * FIXED * 1000) / 1000;
+      ui.resSub.textContent = (gap <= 0 ? '\u2212' : '+') +
+        Math.abs(gap).toFixed(2) + 's vs the challenge' +
+        (gap <= 0 ? ' \u2014 you win' : '') +
+        (h ? ' \u00B7 ' + h + ' contact' + (h > 1 ? 's' : '') : '');
+    }
+    ui.pracNote.hidden = false;
+    ui.pracNote.textContent = practiceCount
+      ? 'Practice laps don\u2019t count and can\u2019t be shared. ' +
+        practiceCount + ' so far' +
+        (practiceBest !== null ? ', best ' + fmt(practiceBest * FIXED * 1000) : '') + '.'
+      : 'Your attempt is locked in. Practice runs the same circuit as many times as you like \u2014 unofficial, and never shared.';
+    ui.result.hidden = false;
+    ui.prompt.hidden = true;
+    ui.hits.textContent = h;
+    ui.time.textContent = fmt(ms);
+    ui.share.onclick = async () => {
+      const txt = shareText(ms, h, outcome);
+      if (navigator.share){
+        try { await navigator.share({ text: txt }); return; }
+        catch(err){ if (err && err.name === 'AbortError') return; }
+      }
+      try{
+        await navigator.clipboard.writeText(txt);
+        ui.share.textContent = 'Copied';
+      } catch(e){
+        ui.shareTx.value = txt;
+        ui.shareTx.hidden = false;
+        ui.shareTx.select();
+        ui.share.textContent = 'Copy manually';
+      }
+    };
+  }
+
+  /* ==================================================================
+     Input — held keys become one nibble per tick
+     ================================================================== */
+  const keys = Object.create(null);
+  const ARROWS = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
+
+  /* WASD alongside the arrows. Matched on event.code rather than the
+     character produced, so the keys work by position: an AZERTY keyboard has
+     Z W S D where QWERTY has W A S D, and a player expects the block under
+     their left hand to steer regardless of what is printed on it. The
+     character is a fallback for anything that doesn't report a code. */
+  const WASD_BY_CODE = {
+    KeyW:'ArrowUp', KeyA:'ArrowLeft', KeyS:'ArrowDown', KeyD:'ArrowRight'
+  };
+  const WASD_BY_CHAR = {
+    w:'ArrowUp', a:'ArrowLeft', s:'ArrowDown', d:'ArrowRight'
+  };
+  /** The driving control an event means, or null if it isn't one. */
+  function drivingKey(e){
+    if (ARROWS.includes(e.key)) return e.key;
+    if (e.code && WASD_BY_CODE[e.code]) return WASD_BY_CODE[e.code];
+    if (!e.code) return WASD_BY_CHAR[(e.key || '').toLowerCase()] || null;
+    return null;
+  }
+
+  /* Which control surface the player actually drove with. Device capability
+     isn't enough — a laptop with a touchscreen could be either, and the two
+     are plausibly not equally fast, so a lap time is only comparable once you
+     know which produced it. */
+  let usedKeyboard = false, usedTouch = false;
+  const inputMethod = () =>
+    usedKeyboard && usedTouch ? 'mixed'
+    : usedTouch ? 'touch'
+    : usedKeyboard ? 'keyboard'
+    : 'none';
+
+  /* One predicate for "the arrow keys belong to the game right now", so the
+     daily and practice lifecycles can never drift apart. */
+  const isDriving = () => uiState === 'running' || uiState === 'practice-running';
+  const atGrid    = () => uiState === 'grid'    || uiState === 'practice-grid';
+  const inputIdle = () => uiState === 'done'    || uiState === 'locked';
+  const inputMask = () =>
+    (keys.ArrowUp    ? IN_UP    : 0) |
+    (keys.ArrowDown  ? IN_DOWN  : 0) |
+    (keys.ArrowLeft  ? IN_LEFT  : 0) |
+    (keys.ArrowRight ? IN_RIGHT : 0);
+
+  /* Hold R to restart a practice lap. A hold rather than a tap because it
+     throws away the lap you're driving, and R sits right next to the keys a
+     hand rests on. The button does the same thing in one click, since a hold
+     is not discoverable on its own. */
+  const RESTART_HOLD_MS = 550;
+  let holdTimer = null, holdFrom = 0;
+
+  function cancelRestartHold(){
+    if (holdTimer === null) return;
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    if (!ui.restart.hidden) ui.restart.textContent = 'Restart';
+  }
+  function beginRestartHold(){
+    if (holdTimer !== null) return;              // keydown repeats while held
+    if (mode !== 'practice') return;
+    if (uiState !== 'practice-running' && uiState !== 'practice-grid') return;
+    holdFrom = performance.now();
+    ui.restart.textContent = 'Hold\u2026';
+    holdTimer = setTimeout(() => {
+      holdTimer = null;
+      ui.restart.textContent = 'Restart';
+      restartPracticeLap();
+      say('Practice lap restarted.');
+    }, RESTART_HOLD_MS);
+  }
+
+  addEventListener('keydown', e => {
+    /* Space and Enter press whichever button a card is offering, so the
+       keyboard can get through the rules without reaching for the mouse. */
+    if (modalOpen && (e.key === ' ' || e.key === 'Enter' || e.key === 'Spacebar')){
+      e.preventDefault();
+      if (modalPrimary) modalPrimary.click();
+      return;
+    }
+
+    // Space pauses a practice session, and resumes it again
+    if ((e.key === ' ' || e.key === 'Spacebar') && mode === 'practice'){
+      e.preventDefault();
+      if (uiState === 'practice-running') pausePractice();
+      else if (practicePaused) resumePractice();
+      return;
+    }
+
+    if ((e.code === 'KeyR' || (!e.code && (e.key === 'r' || e.key === 'R'))) && !e.repeat){
+      beginRestartHold();
+      return;
+    }
+
+    const k = drivingKey(e);
+    if (!k) return;
+    if (inputIdle()) return;   // give the page its keys back
+    if (modalOpen || reveal < 1) return;
+    e.preventDefault();
+    if (atGrid()) startRun();
+    usedKeyboard = true;
+    keys[k] = true;
+  });
+  addEventListener('keyup', e => {
+    if (e.key === 'r' || e.key === 'R' || e.code === 'KeyR') cancelRestartHold();
+    const k = drivingKey(e);
+    if (k) keys[k] = false;
+  });
+  addEventListener('blur', () => {
+    cancelRestartHold();
+    for (const k in keys) keys[k] = false;
+  });
+
+  function pressKey(k){
+    if (modalOpen || reveal < 1 || inputIdle()) return;
+    if (atGrid()) startRun();
+    usedTouch = true;
+    keys[k] = true;
+  }
+  for (const b of document.getElementById('pad').querySelectorAll('.key')){
+    const k = b.dataset.key;
+    const release = () => { b.classList.remove('is-down'); keys[k] = false; };
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      try { b.setPointerCapture(e.pointerId); } catch(_){}
+      b.classList.add('is-down');
+      pressKey(k);
+    });
+    b.addEventListener('pointerup', release);
+    b.addEventListener('pointercancel', release);
+    b.addEventListener('contextmenu', e => e.preventDefault());
+  }
+
+  /* ==================================================================
+     Paper grain, built once and used as a CSS background
+     ================================================================== */
+  (function grain(){
+    const s = 180, c = document.createElement('canvas');
+    c.width = c.height = s;
+    const g = c.getContext('2d'), img = g.createImageData(s,s);
+    for (let i = 0; i < img.data.length; i += 4){
+      const v = 200 + Math.random()*55;
+      img.data[i] = img.data[i+1] = img.data[i+2] = v;
+      img.data[i+3] = Math.random()*16;
+    }
+    g.putImageData(img,0,0);
+    document.getElementById('card').style.setProperty('--grain', 'url(' + c.toDataURL() + ')');
+  })();
+
+  /* ==================================================================
+     Boot
+     ================================================================== */
+  /* Reset wipes the day's result with no undo, so it exists only where a
+     tester needs it: a ?debug URL, or a standalone file opened locally. On
+     the deployed site a player can never reach it. */
+  const DEBUG = new URLSearchParams(location.search).has('debug')
+             || location.protocol === 'file:';
+  ui.reset.hidden = !DEBUG;
+
+  /* ==================================================================
+     Audio. Off until asked for — an engine note is not something to spring
+     on someone, and browsers block audio before a gesture anyway.
+
+     Strictly downstream of the simulation: it reads speed and input and never
+     writes anything back, so a muted lap and a loud one are the same lap.
+     ================================================================== */
+  let audioCtx = null, engine = null, fx_audio = null, soundOn = false;
+
+  async function enableSound(){
+    try {
+      if (!audioCtx){
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return false;
+        audioCtx = new Ctx();
+        const master = audioCtx.createGain();
+        master.gain.value = TUNING.master;
+        master.connect(audioCtx.destination);
+        engine = await createEngine(audioCtx, TUNING);
+        engine.node.connect(master);
+        fx_audio = createEffects(audioCtx, TUNING);
+        fx_audio.node.connect(master);
+      }
+      await audioCtx.resume();
+      return true;
+    } catch (err){
+      reportFault('audio', err);
+      return false;
+    }
+  }
+
+  /* The label lives on the button, not in it — the icon carries the state
+     visually and aria-label carries it for anyone who can't see the icon. */
+  function paintSoundButton(){
+    ui.sound.classList.toggle('is-on', soundOn);
+    ui.sound.classList.remove('is-unavailable');
+    ui.sound.setAttribute('aria-pressed', soundOn ? 'true' : 'false');
+    ui.sound.setAttribute('aria-label', soundOn ? 'Sound on' : 'Sound off');
+    ui.sound.title = soundOn ? 'Sound on' : 'Sound off';
+  }
+
+  ui.sound.addEventListener('click', async () => {
+    if (!soundOn){
+      soundOn = await enableSound();
+      if (!soundOn){
+        ui.sound.classList.add('is-unavailable');
+        ui.sound.setAttribute('aria-label', 'Sound unavailable on this device');
+        ui.sound.title = 'Sound unavailable on this device';
+        return;
+      }
+    } else {
+      soundOn = false;
+      if (audioCtx) audioCtx.suspend();
+    }
+    paintSoundButton();
+    saveKey(SOUND_KEY, { on: soundOn });
+    say(soundOn ? 'Sound on.' : 'Sound off.');
+  });
+
+  /* Fed once a frame from the render loop, never from the fixed-step tick —
+     audio follows wall-clock time, not simulation time. */
+  /* Fired from the simulation loop, so they land on the tick they belong to
+     rather than whenever the next frame happens to arrive. */
+  function audioHit(strength){
+    if (soundOn && fx_audio) fx_audio.thud(audioCtx.currentTime, strength);
+  }
+  function audioSector(index){
+    if (soundOn && fx_audio) fx_audio.sector(audioCtx.currentTime, index);
+  }
+  function audioLap(best){
+    if (soundOn && fx_audio) fx_audio.lap(audioCtx.currentTime, best);
+  }
+
+  function updateAudio(){
+    if (!soundOn || !engine || !audioCtx) return;
+    if (fx_audio){
+      if (isDriving()){
+        fx_audio.setSlip(audioCtx.currentTime, sim.car.slip,
+                         Math.min(1, Math.abs(sim.car.spd)/MAX_SPD));
+      } else {
+        fx_audio.silence(audioCtx.currentTime);
+      }
+    }
+    const info = engine.update(audioCtx.currentTime, {
+      speed: Math.abs(sim.car.spd),
+      maxSpeed: MAX_SPD,
+      throttle: !!keys.ArrowUp,
+      brake: !!keys.ArrowDown,
+      running: isDriving()
+    });
+    if (tuneLive && info){
+      tuneLive.textContent =
+        'gear ' + (info.gear + 1) + '  \u00b7  rate ' + info.rate.toFixed(2) +
+        '  \u00b7  ' + Math.round(info.hz) + ' Hz  \u00b7  ' + Math.round(info.rpm) + ' rpm' +
+        (info.shifting ? '  \u00b7  shift' : '') + (info.usingSample ? '' : '  \u00b7  synth');
+    }
+  }
+
+  /* A live tuning panel, on ?audio. The engine can only be judged by ear, so
+     rather than guess at constants, drive with the sliders open until it
+     sounds right and copy the numbers out. Debug-only; never shipped open. */
+  function buildAudioPanel(){
+    const SPEC = [
+      ['rateIdle', 0.4, 1.4, 0.01], ['rateRedline', 1.0, 3.0, 0.01],
+      ['gears', 3, 8, 1], ['gearOverlap', 0, 0.5, 0.01],
+      ['shiftDrop', 0.3, 0.95, 0.01], ['shiftTime', 0, 0.3, 0.01],
+      ['sampleGain', 0, 1.4, 0.02], ['subLevel', 0, 1.2, 0.02], ['subTrack', 0.1, 1.5, 0.02],
+      ['cutoffIdle', 300, 6000, 50], ['cutoffFull', 3000, 18000, 250],
+      ['gainIdle', 0, 0.6, 0.01], ['gainFull', 0, 1, 0.01],
+      ['loadSlew', 0.01, 0.4, 0.01], ['rateSlew', 0.01, 0.3, 0.01],
+      ['slipStart', 0, 140, 2], ['slipFull', 40, 320, 5],
+      ['screechGain', 0, 1, 0.02], ['screechHz', 600, 6000, 100], ['screechQ', 0.5, 14, 0.5],
+      ['thudGain', 0, 1.5, 0.02], ['thudHz', 50, 500, 5], ['thudDecay', 0.05, 0.7, 0.01],
+      ['scrapeGain', 0, 1, 0.02],
+      ['chimeGain', 0, 0.7, 0.01], ['chimeHz', 300, 1800, 20], ['chimeDecay', 0.2, 2, 0.05],
+      ['master', 0, 1, 0.02]
+    ];
+    const box = document.createElement('div');
+    box.className = 'tuner';
+    box.innerHTML = '<h2>Engine</h2><p class="live" id="tune-live">\u2014</p>';
+    for (const [key, lo, hi, step] of SPEC){
+      const row = document.createElement('label');
+      row.innerHTML = '<span>' + key + '</span><input type="range" min="' + lo +
+        '" max="' + hi + '" step="' + step + '"><b></b>';
+      const input = row.querySelector('input'), val = row.querySelector('b');
+      input.value = TUNING[key];
+      val.textContent = TUNING[key];
+      input.addEventListener('input', () => {
+        TUNING[key] = parseFloat(input.value);
+        val.textContent = input.value;
+      });
+      box.appendChild(row);
+    }
+    const copy = document.createElement('button');
+    copy.textContent = 'Copy values';
+    copy.onclick = () => {
+      const text = JSON.stringify(TUNING, null, 2);
+      navigator.clipboard.writeText(text).then(
+        () => { copy.textContent = 'Copied'; setTimeout(() => copy.textContent = 'Copy values', 1800); },
+        () => { window.prompt('Tuning', text); });
+    };
+    box.appendChild(copy);
+    document.body.appendChild(box);
+    return document.getElementById('tune-live');
+  }
+  const tuneLive = DEBUG && new URLSearchParams(location.search).has('audio')
+    ? buildAudioPanel() : null;
+
+
+  /* Before launch the puzzle number is 0, which is accurate but reads as a
+     bug. "Preview" says the same thing plainly. */
+  ui.daynum.textContent = PUZZLE > 0 ? 'Day ' + PUZZLE : 'Preview';
+  if (matchMedia('(pointer:coarse)').matches)
+    ui.prompt.textContent = 'Tap a control to start';
+  if (!navigator.share) ui.share.textContent = 'Copy result';
+
+  resize();
+  addEventListener('resize', resize);
+
+  (async () => {
+    await initStore();
+    if (RESEARCH_ENABLED){
+      const consent = await loadKey(CONSENT_KEY);
+      research = consent ? !!consent.research : null;
+    }
+    paintResearchLink();
+
+    const prev = await load();
+    if (prev && prev.day === DAY && prev.sim === ACTIVE_VERSION){
+      uiState = 'locked';
+      /* Remembered so "Back to results" can rebuild the card after a practice
+         session, without re-reading storage. */
+      dailyResult = {
+        ms: prev.ms, hits: prev.hits,
+        outcome: prev.outcome || 'done',
+        splits: prev.splits || null,
+        packed: prev.inputs || null,
+        ticks: prev.ticks
+      };
+      if (prev.splits) paintSplits(prev.splits);
+      showResult(prev.ms, prev.hits, true, prev.outcome || 'done');
+
+      const prac = await loadKey(PRACTICE_KEY);
+      if (prac && prac.day === DAY){
+        practiceBest = prac.best ?? null;
+        practiceCount = prac.count || 0;
+        practiceBestInputs = prac.bestInputs || null;
+        practiceBestStart = prac.bestStart || null;
+      }
+      return;
+    }
+    /* A challenge link is the first thing the visitor sees, ahead of the
+       rules card — it's the reason they clicked. Taking it on hands off to
+       the normal first-visit flow. */
+    /* Remembered, but never resumed automatically — the browser needs a
+       gesture, and a page that starts making engine noises on load is a page
+       people close. */
+    const snd = await loadKey(SOUND_KEY);
+    /* A remembered preference can't switch itself back on — the browser wants
+       a gesture first — so the icon shows off and the label explains. */
+    paintSoundButton();
+    if (snd && snd.on){
+      ui.sound.setAttribute('aria-label', 'Sound off \u2014 tap to resume');
+      ui.sound.title = 'Tap to resume sound';
+    }
+
+    challenge = readGhostFromURL();
+    if (challenge){
+      paintTarget();
+      showChallenge();
+      return;
+    }
+
+    const seenRules = await loadKey(RULES_KEY);
+    if (!seenRules) showRules();                     // before a single lap
+    else if (RESEARCH_ENABLED && research === null) showConsent();
+  })();
+
+  /* Fixed-timestep loop. The sim only ever advances in whole FIXED ticks;
+     rendering interpolates the leftover so it stays smooth at any refresh
+     rate. Identical inputs give an identical lap on every device. */
+  let t0 = null, drawStart = null;
+
+  function frame(t){
+    if (t0 === null) t0 = t;
+    let delta = (t - t0)/1000;
+    t0 = t;
+    if (delta > MAX_FRAME) delta = MAX_FRAME;
+
+    if (reveal < 1){
+      if (drawStart === null) drawStart = t;
+      reveal = Math.min(1, (t - drawStart)/1400);
+      drawTrack(reveal);
+      if (reveal >= 1) drawCar(1);
+    } else {
+      if (!trackDone){ trackDone = true; drawTrack(1); }
+
+      if (isDriving()){
+        acc += delta;
+        while (acc >= FIXED){
+          const input = inputMask();
+          const px = sim.car.x, py = sim.car.y;
+          const noseBefore = nosePos(px, py, sim.car.h);
+          const ev = sim.step(input);
+          stepGhost();                 // one ghost tick per player tick
+          inputLog.push(input);
+          acc -= FIXED;
+
+          layTrail(px, py, sim.car.x, sim.car.y);
+          if (ev.hit){
+            scuff(ev.hit.x, ev.hit.y, ev.hit.ox, ev.hit.oy, ev.hit.bite);
+            if (ev.hit.counted){
+              addImpact(ev.hit.x, ev.hit.y, ev.hit.ox, ev.hit.oy, ev.hit.bite);
+              audioHit(ev.hit.bite);
+              ui.hits.textContent = sim.hits;
+              flashContact();
+              say('Wall contact. ' + sim.hits + ' so far.');
+            }
+          }
+
+          /* Flash a sector beam when the car's NOSE crosses the line, not when
+             its centre does. The split timing (in sim.js) still keys off the
+             centre — that's the fair, consistent rule — but visually the beam
+             should light as the nose reaches the gate. Purely cosmetic, so it
+             lives here in the render loop, never in the sim. */
+          const noseAfter = nosePos(sim.car.x, sim.car.y, sim.car.h);
+          checkSectorCrossings(noseBefore, noseAfter);
+
+          if (ev.finished){
+            /* In practice a completed lap continues straight into the next
+               one, so only stop the loop when the run has actually ended. */
+            const stillRunning = endRun(sim.state) === true;
+            if (!stillRunning){ acc = 0; break; }
+          }
+        }
+        if (isDriving()){
+          paintGap();
+          ui.time.textContent = fmt(sim.elapsedMs());
+          if (sim.wrongWay !== wrongWayWasOn){
+            wrongWayWasOn = sim.wrongWay;
+            if (sim.wrongWay) say('Wrong way.');
+          }
+          ui.warn.hidden = !sim.wrongWay;
+          const sp = sim.splitTicks;
+          paintSplits(sim.sectorTicks, sim.sector,
+                      sim.ticks - (sp.length ? sp[sp.length-1] : 0));
+        }
+      } else {
+        acc = 0;
+      }
+
+      updateAudio();
+
+      if (uiState !== 'locked'){
+        drawCar(isDriving() ? acc/FIXED : 1);
+        drawEffects();      // over the car, since drawCar clears the layer
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

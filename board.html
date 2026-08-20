@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ink Circuit — board</title>
+<style>
+  :root{
+    --paper:#F3EEE3; --paper-warm:#EDE6D8; --card:#FBF8F2;
+    --ink:#22242A; --ink-soft:rgba(34,36,42,.58); --ink-faint:rgba(34,36,42,.2);
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--paper-warm); color:var(--ink); font-family:var(--serif);
+    padding:20px; -webkit-font-smoothing:antialiased; min-height:100vh;
+  }
+  .wrap{max-width:1500px;margin:0 auto;}
+
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+  h1{font-size:22px;font-weight:400;letter-spacing:.02em;}
+  h1 em{font-style:italic;color:var(--ink-soft);}
+  .totals{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+  .totals b{font-weight:400;color:var(--ink);}
+
+  .bar{height:3px;background:var(--ink-faint);margin-bottom:18px;position:relative;}
+  .bar i{position:absolute;inset:0 auto 0 0;background:var(--ink);transition:width .3s ease;}
+
+  .epics{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;}
+  .chip{
+    font-family:inherit;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    background:none;border:1px solid var(--ink-faint);color:var(--ink-soft);
+    padding:6px 11px;cursor:pointer;display:flex;align-items:center;gap:7px;
+  }
+  .chip:hover{border-color:var(--ink);color:var(--ink);}
+  .chip.on{border-color:var(--ink);color:var(--ink);background:var(--card);}
+  .chip .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+  .chip .pts{font-variant-numeric:tabular-nums;color:var(--ink-faint);}
+
+  .cols{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start;}
+  .col{background:var(--paper);border:1px solid var(--ink-faint);min-height:220px;padding:12px;}
+  .col.over{border-color:var(--ink);background:#EFE9DC;}
+  .col h2{
+    font-size:11px;font-weight:400;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink-soft);display:flex;justify-content:space-between;
+    padding-bottom:9px;border-bottom:1px solid var(--ink-faint);margin-bottom:11px;
+  }
+  .col h2 span{font-variant-numeric:tabular-nums;}
+
+  .card{
+    background:var(--card);border:1px solid var(--ink-faint);border-left-width:3px;
+    padding:9px 10px;margin-bottom:8px;cursor:grab;position:relative;
+  }
+  .card:active{cursor:grabbing;}
+  .card.drag{opacity:.4;}
+  .card .t{font-size:13.5px;line-height:1.35;padding-right:30px;}
+  .card .dep{font-size:11px;font-style:italic;color:var(--ink-soft);margin-top:4px;}
+  .card .foot{display:flex;align-items:center;gap:8px;margin-top:7px;}
+  .card .ep{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;}
+  .card .sp{
+    position:absolute;top:7px;right:7px;min-width:24px;height:24px;
+    border:1px solid var(--ink-faint);background:none;font-family:inherit;
+    font-size:12px;font-variant-numeric:tabular-nums;color:var(--ink);
+    cursor:pointer;display:grid;place-items:center;padding:0 4px;
+  }
+  .card .sp:hover{border-color:var(--ink);}
+  .card .mv{margin-left:auto;display:flex;gap:3px;}
+  .card .mv button,.card .del{
+    font-family:inherit;font-size:12px;line-height:1;background:none;border:none;
+    color:var(--ink-faint);cursor:pointer;padding:2px 4px;
+  }
+  .card .mv button:hover,.card .del:hover{color:var(--ink);}
+  .card.done .t{opacity:.5;text-decoration:line-through;}
+
+  .add{
+    width:100%;font-family:inherit;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    background:none;border:1px dashed var(--ink-faint);color:var(--ink-faint);
+    padding:7px;cursor:pointer;
+  }
+  .add:hover{border-color:var(--ink-soft);color:var(--ink-soft);}
+
+  footer{margin-top:20px;display:flex;gap:10px;justify-content:flex-end;}
+  footer button{
+    font-family:inherit;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    background:none;border:1px solid var(--ink-faint);color:var(--ink-soft);
+    padding:8px 13px;cursor:pointer;
+  }
+  footer button:hover{border-color:var(--ink);color:var(--ink);}
+  .note{font-size:11.5px;font-style:italic;color:var(--ink-soft);margin-top:14px;}
+
+  @media (max-width:1000px){ .cols{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:620px){ .cols{grid-template-columns:1fr;} body{padding:12px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Ink Circuit <em>— board</em></h1>
+    <p class="totals" id="totals">—</p>
+  </header>
+  <div class="bar"><i id="bar" style="width:0"></i></div>
+
+  <div class="epics" id="epics"></div>
+  <div class="cols" id="cols"></div>
+
+  <footer>
+    <button id="btn-collapse">Hide done</button>
+    <button id="btn-reset">Reset board</button>
+  </footer>
+  <p class="note">Points are Fibonacci: 1, 2, 3, 5, 8, 13, 21. Click a card's number to re-point it.
+    Drag cards between columns, or use ‹ › on touch. Changes save automatically.</p>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const COLS = [
+    { id:'backlog', name:'Backlog' },
+    { id:'next',    name:'Next up' },
+    { id:'doing',   name:'In progress' },
+    { id:'done',    name:'Done' }
+  ];
+
+  const EPICS = {
+    ship:     { name:'Ship',     color:'#6B7A5E' },
+    backend:  { name:'Backend',  color:'#3E5C6B' },
+    ghost:    { name:'Ghost',    color:'#6E5A7B' },
+    irb:      { name:'IRB',      color:'#9E3B32' },
+    rl:       { name:'RL',       color:'#8A6A2F' },
+    analysis: { name:'Analysis', color:'#4A6B60' },
+    access:   { name:'Access',   color:'#5B5A8C' }
+  };
+
+  const FIB = [1,2,3,5,8,13,21];
+
+  /* Ordered roughly by when you'd want to do them. Points are relative effort,
+     not hours — the 13s and 21s are the ones to break down once you start. */
+  const SEED = [
+    // ---- Ship -------------------------------------------------------
+    ['ship','Redeploy and confirm walls render on a real phone',1,'done'],
+    ['ship','First-run explainer: what the rules are before your one attempt',3,'done'],
+    ['ship','Practice mode, logged separately from the daily lap',8,'done'],
+    ['ship','Hide the Reset button behind ?debug before sharing widely',1,'done'],
+    ['ship','Set the LAUNCH date in sim.js so Day 1 is a real day',1,'done'],
+    ['ship','Record input method (touch vs keyboard) on every lap',2,'done'],
+    ['ship','Deploy the current build \u2014 ghosts, practice, a11y, icons are all unshipped',1],
+    ['ship','Delete the stale prototypes: circuit-hero.html, ink-circuit.html',1,'done'],
+    ['ship','Buy a domain and point it at the Vercel project',1],
+    ['ship','Error tracking, so a break on a device you don\u2019t own is visible',2,'done'],
+    ['ship','Open Graph image so a shared link previews as the circuit',2],
+    ['ship','Check a real phone and a real desktop end to end before sharing',2],
+    ['ship','Add `npm test` to CI so a physics change fails loudly',2,'done'],
+    ['ship','Strip or keep the dormant v6 analog code paths',2],
+    ['ship','Widen rotateToStraight window for a gentler launch runway',1],
+    ['ship','Decide whether the 30Hz input-sampling floor is acceptable',1],
+    ['ship','Colourblind-safe check on the red scuff and contact marks',2,'done'],
+    ['ship','Fade or cap accumulated ink over a long practice session',2],
+    ['ship','Sound: engine, tyres, wall contact, chimes \u2014 off by default',3,'done'],
+    ['ship','Reject generated tracks the bot cannot drive cleanly',5,null,'needs: trained policy'],
+
+    ['ship','Digitise circuits from OpenStreetMap into control points',5,null,'PARKED \u2014 needs follow-camera'],
+    ['ship','Calendar map from date to circuit, falling back to procgen',2,null,'PARKED with circuit import'],
+    ['ship','Tune each imported circuit until its corner report is clean',3,null,'PARKED with circuit import'],
+    ['ship','Name circuits by geography, not by race or series (trademarks)',1,null,'PARKED with circuit import'],
+    ['analysis','Real circuits as a held-out transfer test for the agent',5,null,'needs: imported circuits'],
+
+    ['ship','Pause the engine note when the tab loses focus',1],
+    ['ship','Remember the sound choice properly instead of asking again',1],
+    ['ship','Stop the page scrolling when space is pressed mid-lap',1],
+    ['ship','Warn before leaving mid-lap on the one attempt that counts',2],
+    ['ship','Handle a system clock that rolls past midnight mid-session',2],
+    ['ship','Cache the day\u2019s track in module scope for the API',1],
+
+    // ---- Backend ----------------------------------------------------
+    ['backend','Pick and provision Postgres (Neon or Supabase)',2],
+    ['backend','Anonymous player ID: generate, persist, survive refresh',2],
+    ['backend','Schema + unique index on (player_id, day, sim_version)',3],
+    ['backend','Wire POST /api/lap to the database',5],
+    ['backend','Upload practice laps — the TODO in recordPracticeLap',3,null,'needs: /api/lap live'],
+    ['backend','Move one-attempt-a-day enforcement from localStorage to server',5],
+    ['backend','Rate limiting and basic abuse protection',3],
+    ['backend','Sign ghost links server-side — a client checksum can\u2019t stop forgery',3,null,'needs: backend live'],
+    ['backend','POST /api/withdraw, replacing the TODO in the consent flow',3,null,'needs: consent live'],
+    ['backend','Nightly backup / export job',2],
+    ['backend','Daily results endpoint (aggregate only, no leaderboard yet)',5],
+    ['backend','Decide leaderboard: names mean moderation and identity',8],
+
+    // ---- Ghost ------------------------------------------------------
+    ['ghost','Sector splits from the existing checkpoints',3,'done'],
+    ['ghost','Share a lap as ?g= in the URL (~278 chars, no backend)',3,'done'],
+    ['ghost','Align split timing with the drawn sector line (strict crossing)',2,'done'],
+    ['ghost','Render a ghost car replaying an input stream',5,'done'],
+    ['ghost','Race live against a ghost on the same track',8,'done'],
+    ['ghost','Gap-to-ghost readout and sector glyphs in the share',5,null,'needs: a ghost to compare to'],
+    ['ghost','Ghost as teacher: does racing one improve your line?',8,null,'needs: research live'],
+
+    // ---- IRB --------------------------------------------------------
+    ['irb','Decide: academic collaborator or independent IRB',3],
+    ['irb','Fill the [bracketed] placeholders in CONSENT.md',1],
+    ['irb','Write and submit the protocol',13],
+    ['irb','Age gate decision, and state it as a limitation',1],
+    ['irb','Privacy policy page',2],
+    ['irb','Decide public dataset release terms — must be settled before collecting',2],
+    ['irb','Pre-register the track-width hypothesis on OSF',3],
+    ['irb','Flip RESEARCH_ENABLED on once approval lands',1,null,'blocks: all human data'],
+
+    // ---- RL ---------------------------------------------------------
+    ['rl','Port sim.js to Python/numpy',8],
+    ['rl','Conformance test: same input stream, JS vs Python, float tolerance',5,null,'needs: Python port'],
+    ['rl','Gym-style env wrapper around the port',3],
+    ['rl','Observation vector: rangefinders + centreline lookahead, car frame',5],
+    ['rl','Reward: arc-length progress per tick, minus contact penalty',2],
+    ['rl','PPO training loop, ~64 vectorised envs on different seeds',8],
+    ['rl','Train/test seed split and a generalisation metric',3],
+    ['rl','Save checkpoint ladder — early ones are beatable ghosts',2],
+    ['rl','Second observation variant, to catch featurisation artifacts',5],
+    ['rl','Export a trained policy to run in-browser',8],
+
+
+    // ---- Access (WCAG 2.1 AA, the practical standard behind ADA claims) ----
+    ['access','Add an h1 — the page currently starts at h2',1,'done'],
+    ['access','Visible focus ring: outline:none is set with only a border swap',2,'done'],
+    ['access','Target size: footer links are ~10px tall, AA wants 24x24',2,'done'],
+    ['access','Text alternative for the three canvases',2,'done'],
+    ['access','aria-live on the clock, contacts and splits so they are announced',3,'done'],
+    ['access','Announce lap start, wall contact, wrong way and the result',3,'done'],
+    ['access','Focus trap and focus return for rules, consent, challenge, result',5],
+    ['access','Honour prefers-reduced-motion for bursts, flashes and banners',2,'done'],
+    ['access','Keyboard-only pass: reach and operate every control without a mouse',3],
+    ['access','Screen reader pass on VoiceOver and NVDA',5],
+    ['access','Support prefers-contrast and Windows forced-colors mode',3],
+    ['access','axe-core in CI so regressions fail the build',3],
+    ['access','Write an accessibility statement, including what the game cannot do',3],
+    ['access','Decide the non-real-time alternative for players who can\u2019t drive it',5],
+
+    // ---- Analysis ---------------------------------------------------
+    ['analysis','Track-count scaling curve: 1 / 10 / 100 / 1000 tracks',5],
+    ['analysis','Observation-horizon sweep: how far ahead does the track demand?',5],
+    ['analysis','Reaction-delay ablation — line quality vs raw reflexes',5],
+    ['analysis','Racing line emergence: overlay bot ink on the geometric line',3],
+    ['analysis','Out-of-distribution geometry: figure-eight, tighter hairpins',5],
+    ['analysis','Reversed-direction transfer test',2],
+    ['analysis','Practice-session learning curves — do people converge on one line?',5,null,'needs: practice data'],
+    ['analysis','Track width as rule generality — the GOHR replication',8,null,'needs: human data + bot'],
+    ['analysis','Bot-time vs human-time correlation across days',5,null,'needs: human data'],
+    ['analysis','Write it up',13]
+  ];
+
+  const uid = () => Math.random().toString(36).slice(2,9);
+  const seedCards = () => SEED.map(([epic,title,pts,col,dep]) => ({
+    id: uid(), epic, title, pts, col: col || 'backlog', dep: dep || ''
+  }));
+
+  /* Same three-tier storage as the game: hosted, then local, then memory. */
+  const KEY = 'ink-board:v15';
+  const mem = {};
+  let backend = 'memory';
+  async function initStore(){
+    if (window.storage){ try { await window.storage.list('ink-board:'); backend='cloud'; return; } catch(e){} }
+    try { localStorage.setItem('ink-board:probe','1'); localStorage.removeItem('ink-board:probe'); backend='local'; } catch(e){}
+  }
+  async function load(){
+    try{
+      if (backend==='cloud'){ const r = await window.storage.get(KEY); return r ? JSON.parse(r.value) : null; }
+      if (backend==='local'){ const v = localStorage.getItem(KEY); return v ? JSON.parse(v) : null; }
+    } catch(e){}
+    return mem[KEY] || null;
+  }
+  async function save(){
+    mem[KEY] = cards;
+    try{
+      if (backend==='cloud'){ await window.storage.set(KEY, JSON.stringify(cards)); return; }
+      if (backend==='local'){ localStorage.setItem(KEY, JSON.stringify(cards)); }
+    } catch(e){}
+  }
+
+  let cards = [];
+  let filter = null;
+  let hideDone = false;
+
+  const elCols  = document.getElementById('cols');
+  const elEpics = document.getElementById('epics');
+  const elTot   = document.getElementById('totals');
+  const elBar   = document.getElementById('bar');
+
+  function visible(c){
+    if (filter && c.epic !== filter) return false;
+    if (hideDone && c.col === 'done') return false;
+    return true;
+  }
+  const sum = list => list.reduce((a,c) => a + c.pts, 0);
+
+  function renderEpics(){
+    elEpics.innerHTML = '';
+    const all = document.createElement('button');
+    all.className = 'chip' + (filter === null ? ' on' : '');
+    all.innerHTML = 'All <span class="pts">' + sum(cards) + '</span>';
+    all.onclick = () => { filter = null; render(); };
+    elEpics.appendChild(all);
+
+    for (const [id, e] of Object.entries(EPICS)){
+      const mine = cards.filter(c => c.epic === id);
+      const left = sum(mine.filter(c => c.col !== 'done'));
+      const b = document.createElement('button');
+      b.className = 'chip' + (filter === id ? ' on' : '');
+      b.innerHTML = '<span class="dot" style="background:' + e.color + '"></span>' +
+                    e.name + ' <span class="pts">' + left + '/' + sum(mine) + '</span>';
+      b.onclick = () => { filter = (filter === id ? null : id); render(); };
+      elEpics.appendChild(b);
+    }
+  }
+
+  function makeCard(c){
+    const e = EPICS[c.epic];
+    const d = document.createElement('div');
+    d.className = 'card' + (c.col === 'done' ? ' done' : '');
+    d.draggable = true;
+    d.style.borderLeftColor = e.color;
+    d.dataset.id = c.id;
+
+    d.innerHTML =
+      '<button class="sp" title="Re-point">' + c.pts + '</button>' +
+      '<p class="t"></p>' +
+      (c.dep ? '<p class="dep"></p>' : '') +
+      '<div class="foot">' +
+        '<span class="ep" style="color:' + e.color + '">' + e.name + '</span>' +
+        '<span class="mv">' +
+          '<button class="lf" title="Move left">&lsaquo;</button>' +
+          '<button class="rt" title="Move right">&rsaquo;</button>' +
+          '<button class="del" title="Delete">&times;</button>' +
+        '</span>' +
+      '</div>';
+
+    d.querySelector('.t').textContent = c.title;
+    if (c.dep) d.querySelector('.dep').textContent = c.dep;
+
+    d.querySelector('.sp').onclick = ev => {
+      ev.stopPropagation();
+      c.pts = FIB[(FIB.indexOf(c.pts) + 1) % FIB.length];
+      save(); render();
+    };
+    const shift = n => {
+      const i = COLS.findIndex(x => x.id === c.col);
+      const j = Math.max(0, Math.min(COLS.length-1, i+n));
+      c.col = COLS[j].id; save(); render();
+    };
+    d.querySelector('.lf').onclick = ev => { ev.stopPropagation(); shift(-1); };
+    d.querySelector('.rt').onclick = ev => { ev.stopPropagation(); shift(1); };
+    d.querySelector('.del').onclick = ev => {
+      ev.stopPropagation();
+      cards = cards.filter(x => x.id !== c.id);
+      save(); render();
+    };
+
+    d.addEventListener('dragstart', ev => {
+      ev.dataTransfer.setData('text/plain', c.id);
+      d.classList.add('drag');
+    });
+    d.addEventListener('dragend', () => d.classList.remove('drag'));
+    return d;
+  }
+
+  function render(){
+    renderEpics();
+    elCols.innerHTML = '';
+    for (const col of COLS){
+      const mine = cards.filter(c => c.col === col.id && visible(c));
+      const box = document.createElement('div');
+      box.className = 'col';
+      const h = document.createElement('h2');
+      h.innerHTML = col.name + '<span>' + sum(mine) + ' pts &middot; ' + mine.length + '</span>';
+      box.appendChild(h);
+      for (const c of mine) box.appendChild(makeCard(c));
+
+      const add = document.createElement('button');
+      add.className = 'add';
+      add.textContent = '+ add card';
+      add.onclick = () => {
+        const title = prompt('Card title');
+        if (!title) return;
+        cards.push({ id: uid(), epic: filter || 'ship', title, pts: 3, col: col.id, dep: '' });
+        save(); render();
+      };
+      box.appendChild(add);
+
+      box.addEventListener('dragover', ev => { ev.preventDefault(); box.classList.add('over'); });
+      box.addEventListener('dragleave', () => box.classList.remove('over'));
+      box.addEventListener('drop', ev => {
+        ev.preventDefault();
+        box.classList.remove('over');
+        const id = ev.dataTransfer.getData('text/plain');
+        const c = cards.find(x => x.id === id);
+        if (c){ c.col = col.id; save(); render(); }
+      });
+      elCols.appendChild(box);
+    }
+
+    const shown = cards.filter(c => !filter || c.epic === filter);
+    const total = sum(shown);
+    const done  = sum(shown.filter(c => c.col === 'done'));
+    elTot.innerHTML = '<b>' + done + '</b> of <b>' + total + '</b> points &middot; ' +
+                      shown.length + ' cards &middot; ' +
+                      (total ? Math.round(done/total*100) : 0) + '%';
+    elBar.style.width = (total ? done/total*100 : 0) + '%';
+  }
+
+  document.getElementById('btn-reset').onclick = () => {
+    if (!confirm('Reset the board to its starting state?')) return;
+    cards = seedCards(); save(); render();
+  };
+  document.getElementById('btn-collapse').onclick = ev => {
+    hideDone = !hideDone;
+    ev.target.textContent = hideDone ? 'Show done' : 'Hide done';
+    render();
+  };
+
+  (async () => {
+    await initStore();
+    const saved = await load();
+    cards = (saved && saved.length) ? saved : seedCards();
+    if (!saved) save();
+    render();
+  })();
+})();
+</script>
+</body>
+</html>

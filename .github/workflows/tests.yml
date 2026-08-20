@@ -1,0 +1,46 @@
+name: tests
+
+# The conformance suite is what stops a physics change from silently
+# invalidating stored laps and desyncing ghosts. It has caught real drift
+# more than once, so it runs on every push rather than on demand.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # No dependencies to install — the suite runs on plain Node.
+      # Conformance covers the simulation; the smoke test boots the real
+      # bundle in a stub DOM, which is what catches a page that parses fine
+      # and then dies on the first line of setup.
+      - name: Run tests
+        run: npm test
+
+      # The palette must stay readable for colour-blind players. This fails
+      # only if a colour drops below the contrast floor against paper.
+      - name: Colour-vision audit
+        run: npm run cvd
+
+      # standalone.html is a build output. If it has drifted from index.html
+      # or sim.js, someone edited the wrong file, so fail loudly rather than
+      # shipping a stale bundle.
+      - name: Check standalone.html is up to date
+        run: |
+          cp standalone.html /tmp/standalone.committed.html
+          npm run build
+          if ! diff -q /tmp/standalone.committed.html standalone.html > /dev/null; then
+            echo "::error::standalone.html is out of date — run 'npm run build' and commit the result."
+            diff /tmp/standalone.committed.html standalone.html | head -40 || true
+            exit 1
+          fi
+          echo "standalone.html matches source."
