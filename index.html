@@ -331,6 +331,29 @@
   }
   .researchlink[hidden]{ display:none; }
 
+  /* Info sits at the far left of the footer, away from the lap controls on
+     the right. It is the one button in that row with nothing to do with the
+     lap you are driving, and the gap says so without a separator. */
+  #btn-info{ margin-right:auto; }
+
+  /* About. Left-aligned like the consent card — this is a short column of
+     links, and centred links are harder to scan than ones sharing a left
+     edge. */
+  .info{ width:min(300px,88%); text-align:left; }
+  .info h2{ text-align:left; }
+  .info-links{ list-style:none; margin:0 0 12px; }
+  .info-links li + li{ margin-top:9px; }
+  .info-links a{
+    font-size:clamp(12px,1.25vw,13.5px); color:var(--ink);
+    text-decoration:none; border-bottom:1px solid var(--ink-faint);
+  }
+  .info-links a:hover{ border-bottom-color:var(--ink); }
+  .info .c-fine{
+    font-size:clamp(10px,1.05vw,11.5px); line-height:1.5;
+    color:var(--ink-soft); font-style:italic; margin-bottom:14px;
+  }
+  #info-close{ margin-top:2px; }
+
   /* Debug-only tuning panel. Deliberately plain — it is a workbench, not part
      of the game, and it should never be mistaken for one. */
   .tuner{
@@ -723,6 +746,16 @@
       <button id="stats-close" class="c-primary">Back</button>
     </div>
 
+    <div class="result info" id="info" hidden>
+      <h2>About</h2>
+      <ul class="info-links">
+        <li><a href="https://bolognino.dev" target="_blank" rel="noopener noreferrer">bolognino.dev</a></li>
+        <li><a href="https://buymeacoffee.com/jcbolo7201T" target="_blank" rel="noopener noreferrer">Buy me a coffee</a></li>
+      </ul>
+      <p class="c-fine">Docs coming soon.</p>
+      <button id="info-close" class="c-primary">Back</button>
+    </div>
+
     <div class="result" id="result" hidden>
       <h2 id="res-head">Lap complete</h2>
       <p class="time" id="res-time">0:00.00</p>
@@ -738,6 +771,8 @@
   </section>
 
   <div class="row foot">
+    <button id="btn-info" class="researchlink iconbtn" aria-haspopup="dialog"
+            aria-expanded="false" aria-label="About Ink Circuit"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M12 11.2v5.1"/><path d="M12 7.8v.7"/></svg></button>
     <button id="btn-back" class="researchlink" hidden>Results</button>
     <button id="btn-restart" class="researchlink" hidden>Restart</button>
     <button id="btn-ghost" class="researchlink" hidden>Ghost: off</button>
@@ -1446,6 +1481,9 @@ import { createEngine, createEffects, TUNING } from './audio.js';
     statsSum:   document.getElementById('stats-summary'),
     statsNote:  document.getElementById('stats-note'),
     statsClose: document.getElementById('stats-close'),
+    info:       document.getElementById('btn-info'),
+    infoCard:   document.getElementById('info'),
+    infoClose:  document.getElementById('info-close'),
     pracNote: document.getElementById('practice-note'),
     badge:    document.getElementById('badge'),
     best:     document.getElementById('r-best'),
@@ -1797,6 +1835,7 @@ import { createEngine, createEffects, TUNING } from './audio.js';
     ui.hits.textContent = '0';
     ui.time.textContent = '0:00.00';
     ui.prompt.hidden = true;
+    ui.info.hidden = true;   // the clock does not stop for a card
     say(mode === 'practice' ? 'Practice lap started.' : 'Lap started. Clock running.');
     ui.retire.hidden = mode === 'practice';   // practice laps are free to abandon
     ui.retire.textContent = 'Retire';
@@ -1817,6 +1856,7 @@ import { createEngine, createEffects, TUNING } from './audio.js';
     uiState = 'done';
     retireArmed = false;
     ui.retire.hidden = true;
+    ui.info.hidden = false;
     ui.warn.hidden = true;
     ui.contact.hidden = true;
     paintSplits(sim.sectorTicks);
@@ -1852,6 +1892,7 @@ import { createEngine, createEffects, TUNING } from './audio.js';
   function endPracticeRun(outcome){
     retireArmed = false;
     ui.retire.hidden = true;
+    ui.info.hidden = false;
     ui.warn.hidden = true;
     ui.contact.hidden = true;
     const ms = sim.elapsedMs();
@@ -2059,6 +2100,7 @@ import { createEngine, createEffects, TUNING } from './audio.js';
     practicePaused = true;
     uiState = 'practice-paused';
     for (const k in keys) keys[k] = false;
+    ui.info.hidden = false;
     ui.warn.hidden = true;
     ui.contact.hidden = true;
     ui.gap.hidden = ui.gapL.hidden = true;
@@ -2239,6 +2281,33 @@ import { createEngine, createEffects, TUNING } from './audio.js';
   }
   ui.stats.addEventListener('click', showStats);
   ui.statsClose.addEventListener('click', hideStats);
+
+  /* About. Any open card sets modalOpen, which blocks the controls — but it
+     does NOT stop the clock, so this button is taken away for the length of a
+     lap rather than left there to cost someone their one attempt of the day.
+     The guard covers the other direction: rules and consent leave the footer
+     reachable, and stacking a second card would clear modalOpen on close
+     while the first one is still up. */
+  let infoReturn = false;
+  function showInfo(){
+    if (modalOpen) return;
+    infoReturn = !ui.result.hidden;
+    ui.result.hidden = true;
+    ui.infoCard.hidden = false;
+    ui.info.setAttribute('aria-expanded', 'true');
+    modalOpen = true;
+    modalPrimary = ui.infoClose;
+  }
+  function hideInfo(){
+    ui.infoCard.hidden = true;
+    ui.info.setAttribute('aria-expanded', 'false');
+    modalOpen = false;
+    modalPrimary = null;
+    if (infoReturn) ui.result.hidden = false;
+    ui.info.focus();   // back where the keyboard left off, not at the top
+  }
+  ui.info.addEventListener('click', showInfo);
+  ui.infoClose.addEventListener('click', hideInfo);
 
   const HEADINGS = { done:'Lap complete', retired:'Retired', dnf:'Out of time' };
 
