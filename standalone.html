@@ -335,6 +335,10 @@
      the right. It is the one button in that row with nothing to do with the
      lap you are driving, and the gap says so without a separator. */
   #btn-info{ margin-right:auto; }
+  /* Unpressable during the day's attempt, but still in place — a button that
+     vanishes reads as broken, and the row reflows when it goes. */
+  #btn-info:disabled{ cursor:default; }
+  #btn-info:disabled:hover{ color:var(--ink-soft); }
 
   /* About. Left-aligned like the consent card — this is a short column of
      links, and centred links are harder to scan than ones sharing a left
@@ -482,10 +486,11 @@
   .key{
     /* Well past the 24px accessibility floor — these are driven with a thumb
        at speed, not tapped carefully. Flexible so the row always fits. */
-    flex:1 1 0; min-width:52px;
-    /* Capped by height as well as width. On a short phone an 84px button plus
-       the header, the links and the gaps leaves the circuit nothing. */
-    max-width:min(84px, 12dvh);
+    flex:1 1 0; min-width:58px;
+    /* Capped by height as well as width. On a short phone the button plus
+       the header, the links and the gaps has to leave the circuit something,
+       so the dvh term is what actually binds on anything small. */
+    max-width:min(96px, 13.5dvh);
     aspect-ratio:1; border-radius:50%;
     padding:0; letter-spacing:0; text-transform:none;
     color:var(--ink); border:1px solid var(--ink); background:none;
@@ -560,13 +565,20 @@
     .splits .sp i{ font-size:clamp(7.5px,2vw,9px); letter-spacing:.1em; }
     .splits .sp b{ min-width:0; }
 
-    /* The badge shares the band with the readout, so it stays small and out
-       of the way — it only has to be legible enough to remind you the lap
-       doesn't count. */
+    /* The badge gets its own line above the clock. Both used to sit at the
+       top-left and top-centre of the same band, which was fine until a
+       practice lap with a ghost put time, last, best, gap and contacts in
+       one row — wide enough to run straight under the badge.
+
+       It stays small either way: it only has to remind you the lap doesn't
+       count. */
     .badge{
+      left:50%; right:auto; transform:translateX(-50%);
       font-size:clamp(7px,2vw,8.5px); letter-spacing:.16em;
       padding:3px 7px; border-color:rgba(34,36,42,.14);
     }
+    /* Only while practising, so the daily lap never pays for the room. */
+    .stage.is-practice .readout{ top:calc(clamp(7px,2vw,8.5px) + 14px); }
   }
 
   /* only show the pad where there's no keyboard to speak of */
@@ -623,7 +635,7 @@
       .pad-group:nth-of-type(2){ flex-direction:column-reverse; }
       .key{
         flex:0 0 auto;
-        width:clamp(44px, 14dvh, 64px); max-width:none; min-width:0;
+        width:clamp(50px, 16dvh, 74px); max-width:none; min-width:0;
       }
       /* every pixel of height counts */
       .wordmark em{ display:none; }
@@ -3219,22 +3231,44 @@ async function createEngine(ctx, t = TUNING){
      because the two want different shapes: a result is three short lines for
      a group chat, a challenge is one long link. */
   ui.challenge.addEventListener('click', async () => {
-    if (!dailyResult || !dailyResult.packed || dailyResult.outcome !== 'done'){
-      ui.challenge.textContent = 'Finish a lap first';
+    /* Always the day's locked-in lap — never whatever is on screen. The card
+       is also shown over a paused practice session, and a challenge built
+       from that would be a lap that never counted.
+
+       It used to require outcome 'done', which read as "finish the lap you
+       are driving" to anyone who had retired or timed out on the day's
+       attempt and gone into practice. A stopped lap still leaves a ghost
+       worth racing, so the only thing that can block this now is having no
+       stored lap at all. */
+    if (!dailyResult || !dailyResult.packed){
+      ui.challenge.textContent = 'No lap to send yet';
       setTimeout(() => { ui.challenge.textContent = 'Challenge a friend'; }, 2500);
       return;
     }
     const url = buildGhostURL(dailyResult.packed, DAY);
-    const text = 'Beat my Ink Circuit lap: ' + fmt(dailyResult.ms) + '\n' + url;
+
+    /* A stopped lap still makes a ghost, but it stops where you did — so say
+       so. Someone who thinks they are chasing a full lap and watches the car
+       give up halfway reads it as a broken link, not as your lap. */
+    const note = dailyResult.outcome === 'retired'
+      ? ' \u2014 I retired, so the ghost stops where I did'
+      : dailyResult.outcome !== 'done'
+        ? ' \u2014 I ran out of time, so the ghost stops where I did'
+        : '';
+    const label = 'Beat my Ink Circuit lap: ' + fmt(dailyResult.ms);
+    const text  = label + note + '\n' + url;
+    const html  = '<a href="' + esc(url) + '">' + esc(label) + '</a>' + esc(note);
+
+    /* The share sheet gets the link as a link rather than buried in the
+       text, which is what lets each app present it properly. */
     if (navigator.share){
-      try { await navigator.share({ text }); return; }
+      try { await navigator.share({ text: label + note, url }); return; }
       catch (err){ if (err && err.name === 'AbortError') return; }
     }
-    try {
-      await navigator.clipboard.writeText(text);
+    if (await copyRich(html, text)){
       ui.challenge.textContent = 'Link copied';
       setTimeout(() => { ui.challenge.textContent = 'Challenge a friend'; }, 2500);
-    } catch (_){
+    } else {
       ui.shareTx.value = text;
       ui.shareTx.hidden = false;
       ui.shareTx.select();
@@ -3280,13 +3314,41 @@ async function createEngine(ctx, t = TUNING){
     const shown = Math.min(h, 12);
     return '\u2715'.repeat(shown) + (h > shown ? ' +' + (h-shown) : '');
   }
+  /* The domain is the title. Every chat client linkifies a bare domain, so
+     naming the site and pointing at it become the same three lines instead of
+     four — the trailing URL was repeating what the first line already said. */
   function shareText(ms, h, outcome = 'done'){
-    const head = PUZZLE > 0 ? 'Ink Circuit #' + PUZZLE : 'Ink Circuit — preview';
+    const head = PUZZLE > 0 ? 'inkcircuit.ink #' + PUZZLE : 'inkcircuit.ink — preview';
     const line = outcome === 'done'
       ? fmt(ms) + ' \u2014 ' + (h ? h + ' wall contact' + (h>1?'s':'') : 'clean lap')
       : (outcome === 'retired' ? 'retired' : 'did not finish') +
         (h ? ' \u2014 ' + h + ' wall contact' + (h>1?'s':'') : '');
-    return [head, line, marks(h), SHARE_URL].filter(Boolean).join('\n');
+    return [head, line, marks(h)].filter(Boolean).join('\n');
+  }
+
+  /* Put a real link on the clipboard rather than a naked URL. Anywhere that
+     takes rich text — mail, iMessage, Slack, docs — uses the text/html
+     flavour and shows one clickable line; anywhere that doesn't falls back to
+     the plain flavour in the same write, so nothing is lost.
+
+     Both flavours go in a single ClipboardItem: a second write would replace
+     the first rather than add to it. */
+  const esc = s => String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  async function copyRich(html, plain){
+    try{
+      if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write){
+        await navigator.clipboard.write([ new ClipboardItem({
+          'text/html':  new Blob([html],  { type:'text/html'  }),
+          'text/plain': new Blob([plain], { type:'text/plain' })
+        }) ]);
+        return true;
+      }
+    } catch(_){ /* fall through to plain text */ }
+    try { await navigator.clipboard.writeText(plain); return true; }
+    catch(_){ return false; }
   }
 
   /* ------------------------------------------------------------------
@@ -3431,7 +3493,11 @@ async function createEngine(ctx, t = TUNING){
     ui.hits.textContent = '0';
     ui.time.textContent = '0:00.00';
     ui.prompt.hidden = true;
-    ui.info.hidden = true;   // the clock does not stop for a card
+    /* The daily lap has no pause, so a card opened mid-lap would block the
+       controls with the clock still running. The button stays put — it just
+       cannot be pressed until the attempt is over. Practice has a pause, so
+       it keeps working there. */
+    if (mode !== 'practice') setInfoEnabled(false);
     say(mode === 'practice' ? 'Practice lap started.' : 'Lap started. Clock running.');
     ui.retire.hidden = mode === 'practice';   // practice laps are free to abandon
     ui.retire.textContent = 'Retire';
@@ -3452,7 +3518,7 @@ async function createEngine(ctx, t = TUNING){
     uiState = 'done';
     retireArmed = false;
     ui.retire.hidden = true;
-    ui.info.hidden = false;
+    setInfoEnabled(true);
     ui.warn.hidden = true;
     ui.contact.hidden = true;
     paintSplits(sim.sectorTicks);
@@ -3488,7 +3554,7 @@ async function createEngine(ctx, t = TUNING){
   function endPracticeRun(outcome){
     retireArmed = false;
     ui.retire.hidden = true;
-    ui.info.hidden = false;
+    setInfoEnabled(true);
     ui.warn.hidden = true;
     ui.contact.hidden = true;
     const ms = sim.elapsedMs();
@@ -3664,6 +3730,7 @@ async function createEngine(ctx, t = TUNING){
     practicePaused = false;
     ui.practice.textContent = 'Practice this track';
     mode = 'practice';
+    stage.classList.add('is-practice');
     sim = createSim(track);          // a fresh sim; the daily one is finished
     clearInk();
     fx.length = 0;
@@ -3696,7 +3763,7 @@ async function createEngine(ctx, t = TUNING){
     practicePaused = true;
     uiState = 'practice-paused';
     for (const k in keys) keys[k] = false;
-    ui.info.hidden = false;
+    setInfoEnabled(true);
     ui.warn.hidden = true;
     ui.contact.hidden = true;
     ui.gap.hidden = ui.gapL.hidden = true;
@@ -3728,6 +3795,7 @@ async function createEngine(ctx, t = TUNING){
     practicePaused = false;
     ui.practice.textContent = 'Practice this track';
     mode = 'daily';
+    stage.classList.remove('is-practice');
     uiState = dailyResult ? 'done' : 'locked';
     ui.badge.hidden = true;
     ui.back.hidden = true;
@@ -3885,8 +3953,17 @@ async function createEngine(ctx, t = TUNING){
      reachable, and stacking a second card would clear modalOpen on close
      while the first one is still up. */
   let infoReturn = false;
+  /* Greyed rather than hidden. It used to hide itself for the length of a
+     lap, which moved the rest of the footer and made the button feel like it
+     had gone away for good — it only came back after a pause. */
+  function setInfoEnabled(on){
+    ui.info.disabled = !on;
+    ui.info.classList.toggle('is-unavailable', !on);
+  }
   function showInfo(){
-    if (modalOpen) return;
+    if (modalOpen || ui.info.disabled) return;
+    /* Practice can be paused, so reading this never costs a lap. */
+    if (uiState === 'practice-running') pausePractice();
     infoReturn = !ui.result.hidden;
     ui.result.hidden = true;
     ui.infoCard.hidden = false;
