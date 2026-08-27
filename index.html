@@ -352,10 +352,6 @@
     text-decoration:none; border-bottom:1px solid var(--ink-faint);
   }
   .info-links a:hover{ border-bottom-color:var(--ink); }
-  .info .c-fine{
-    font-size:clamp(10px,1.05vw,11.5px); line-height:1.5;
-    color:var(--ink-soft); font-style:italic; margin-bottom:12px;
-  }
   #info-close{ margin-top:2px; }
 
   /* Debug-only tuning panel. Deliberately plain — it is a workbench, not part
@@ -760,8 +756,8 @@
 
     <div class="result info" id="info" hidden>
       <h2>About</h2>
-      <p class="c-fine">Docs coming soon.</p>
       <ul class="info-links">
+        <li><a href="/about.html" target="_blank" rel="noopener">About the project</a></li>
         <li><a href="https://bolognino.dev" target="_blank" rel="noopener noreferrer">bolognino.dev</a></li>
         <li><a href="https://buymeacoffee.com/jcbolo7201T" target="_blank" rel="noopener noreferrer">Buy me a coffee</a></li>
       </ul>
@@ -1718,11 +1714,19 @@ import { createEngine, createEffects, TUNING } from './audio.js';
     const shown = Math.min(h, 12);
     return '\u2715'.repeat(shown) + (h > shown ? ' +' + (h-shown) : '');
   }
-  /* The domain is the title. Every chat client linkifies a bare domain, so
-     naming the site and pointing at it become the same three lines instead of
-     four — the trailing URL was repeating what the first line already said. */
+  /* The domain is the title, so naming the site and pointing at it are the
+     same line rather than a heading plus a trailing URL.
+
+     The www. is load-bearing, not decoration. Autolinkers in SMS and other
+     plain-text clients match on a list of known TLDs, and .ink — being one
+     of the newer ones — is missing from most of them, so "inkcircuit.ink"
+     arrived as dead text. A leading www. is the other trigger they all
+     recognise. Do not tidy it away.
+
+     Only the display text carries it. SHARE_URL and the challenge links stay
+     on the apex domain, which is canonical and saves a redirect hop. */
   function shareText(ms, h, outcome = 'done'){
-    const head = PUZZLE > 0 ? 'inkcircuit.ink #' + PUZZLE : 'inkcircuit.ink — preview';
+    const head = PUZZLE > 0 ? 'www.inkcircuit.ink #' + PUZZLE : 'www.inkcircuit.ink — preview';
     const line = outcome === 'done'
       ? fmt(ms) + ' \u2014 ' + (h ? h + ' wall contact' + (h>1?'s':'') : 'clean lap')
       : (outcome === 'retired' ? 'retired' : 'did not finish') +

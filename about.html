@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EDE6D8">
+
+<!-- Rewrite this description once the page says something. It is what shows
+     under the link in a search result, so it should describe the page, not
+     the game. -->
+<meta name="description" content="About Ink Circuit — the daily one-lap driving game and the research project behind it.">
+<link rel="canonical" href="https://inkcircuit.ink/about.html">
+<meta name="robots" content="index, follow">
+
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Ink Circuit">
+<meta property="og:url" content="https://inkcircuit.ink/about.html">
+<meta property="og:title" content="About Ink Circuit">
+<meta property="og:description" content="About Ink Circuit — the daily one-lap driving game and the research project behind it.">
+<meta property="og:image" content="https://inkcircuit.ink/icons/icon-512.png">
+<meta property="og:locale" content="en">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="About Ink Circuit">
+<meta name="twitter:description" content="About Ink Circuit — the daily one-lap driving game and the research project behind it.">
+<meta name="twitter:image" content="https://inkcircuit.ink/icons/icon-512.png">
+
+<title>About — Ink Circuit</title>
+
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="alternate icon" href="icons/favicon.ico">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="icons/site.webmanifest">
+
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  if (location.protocol !== 'file:') {
+    var s = document.createElement('script');
+    s.defer = true;
+    s.src = '/_vercel/insights/script.js';
+    document.head.appendChild(s);
+  }
+</script>
+
+<style>
+  /* Same palette and type as the game. Kept inline and self-contained,
+     like index.html — the site has no stylesheet to share. */
+  :root{
+    --paper:      #F3EEE3;
+    --paper-warm: #EDE6D8;
+    --ink:        #22242A;
+    --ink-soft:   rgba(34,36,42,.55);
+    --ink-faint:  rgba(34,36,42,.22);
+    --ink-label:  rgba(34,36,42,.70);
+    --red:        #9E3B32;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    --bg-square: 44px;
+    --bg-check: rgba(34,36,42,.042);
+    background-color: var(--paper-warm);
+    background-image:
+      repeating-conic-gradient(var(--bg-check) 0% 25%, transparent 0% 50%);
+    background-size: var(--bg-square) var(--bg-square);
+    background-position: center;
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: var(--serif);
+    -webkit-font-smoothing:antialiased;
+    padding:24px;
+    min-height:100vh;
+    min-height:100dvh;
+  }
+  /* One column, measured in characters — a line of prose stops being
+     comfortable somewhere around 70. */
+  .card{
+    width:min(68ch,100%);
+    margin:0 auto;
+    background:var(--paper);
+    background-image:var(--grain);
+    border:1px solid var(--ink-faint);
+    padding:clamp(22px,4vw,54px);
+    position:relative;
+  }
+  .card::after{
+    content:""; position:absolute; inset:clamp(9px,1.1vw,16px);
+    border:1px solid rgba(34,36,42,.10); pointer-events:none;
+  }
+
+  header{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:16px; flex-wrap:wrap;
+    padding-bottom:14px; margin-bottom:clamp(20px,3vw,32px);
+    border-bottom:1px solid var(--ink-faint);
+  }
+  .wordmark{
+    font-size:clamp(15px,1.7vw,21px); letter-spacing:.04em; font-weight:400;
+  }
+  .wordmark em{ font-style:italic; color:var(--ink-soft); }
+  .back{
+    font-size:clamp(10px,1.05vw,12px); letter-spacing:.2em; text-transform:uppercase;
+    color:var(--ink-soft); text-decoration:none;
+    border-bottom:1px solid var(--ink-faint); padding-bottom:2px;
+    white-space:nowrap;
+  }
+  .back:hover{ color:var(--ink); border-bottom-color:var(--ink); }
+
+  /* ------------------------------------------------------------------
+     Everything below is the kit. Write inside <main> using these tags and
+     it will already look like the rest of the site — no new CSS needed.
+     ------------------------------------------------------------------ */
+  main h1{
+    font-size:clamp(24px,3.4vw,34px); font-weight:400; line-height:1.2;
+    letter-spacing:.01em; margin-bottom:clamp(14px,2vw,20px);
+  }
+  main h2{
+    font-size:clamp(11px,1.15vw,13px); font-weight:400; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--ink-soft);
+    margin:clamp(26px,3.6vw,40px) 0 12px;
+  }
+  main h3{
+    font-size:clamp(15px,1.6vw,18px); font-weight:400; font-style:italic;
+    margin:22px 0 8px;
+  }
+  main p{
+    font-size:clamp(14px,1.35vw,16px); line-height:1.62; margin-bottom:14px;
+  }
+  /* The opening paragraph carries the page; give it a little more air. */
+  main .lede{
+    font-size:clamp(15.5px,1.6vw,18px); line-height:1.55; color:var(--ink-soft);
+    margin-bottom:20px;
+  }
+  main ul, main ol{ margin:0 0 16px 1.1em; }
+  main li{
+    font-size:clamp(14px,1.35vw,16px); line-height:1.62; margin-bottom:7px;
+  }
+  main a{ color:var(--ink); text-decoration:none; border-bottom:1px solid var(--ink-faint); }
+  main a:hover{ border-bottom-color:var(--ink); }
+  main strong{ font-weight:600; }
+  main em{ font-style:italic; }
+  main blockquote{
+    border-left:2px solid var(--ink-faint); padding-left:16px; margin:0 0 16px;
+    font-style:italic; color:var(--ink-soft);
+  }
+  main hr{
+    border:0; border-top:1px solid var(--ink-faint);
+    margin:clamp(26px,3.6vw,40px) 0;
+  }
+  main code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.88em; background:rgba(34,36,42,.05);
+    padding:1px 5px; border:1px solid var(--ink-faint);
+  }
+  /* Small print — the note-to-the-reader voice used on the game's cards. */
+  main .fine{
+    font-size:clamp(11px,1.1vw,12.5px); line-height:1.55;
+    color:var(--ink-soft); font-style:italic;
+  }
+  main figure{ margin:0 0 18px; }
+  main img{ max-width:100%; height:auto; display:block; border:1px solid var(--ink-faint); }
+  main figcaption{
+    font-size:clamp(10.5px,1.05vw,12px); color:var(--ink-soft);
+    font-style:italic; margin-top:7px;
+  }
+
+  footer{
+    margin-top:clamp(30px,4.4vw,52px); padding-top:14px;
+    border-top:1px solid var(--ink-faint);
+    display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    font-size:clamp(10px,1.05vw,12px); letter-spacing:.16em;
+    text-transform:uppercase; color:var(--ink-soft);
+  }
+  footer a{ color:var(--ink-soft); text-decoration:none; border-bottom:1px solid var(--ink-faint); }
+  footer a:hover{ color:var(--ink); border-bottom-color:var(--ink); }
+
+  a:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
+
+  @media (max-width:620px){
+    body{ padding:10px; }
+    header{ margin-bottom:20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+
+  <header>
+    <p class="wordmark">Ink Circuit<em> — one lap a day</em></p>
+    <a class="back" href="/">Back to the circuit</a>
+  </header>
+
+  <main>
+
+    <!-- ================================================================
+         WRITE HERE. Delete everything between this comment and the one
+         that closes it — it is only here to show what the styles look
+         like against real text.
+
+         Tags that are already styled:
+           <h1>                the page title, once at the top
+           <p class="lede">    opening paragraph, slightly larger and softer
+           <h2>               small uppercase section label
+           <h3>               italic sub-heading
+           <p> <ul> <ol> <li> <a> <strong> <em>
+           <blockquote> <hr> <code>
+           <p class="fine">    small italic aside
+           <figure><img><figcaption>
+         ================================================================ -->
+
+    <h1>About Ink Circuit</h1>
+
+    <p class="lede">Endless track layouts make for a great daily challenge against friends, and a great Reinforcement Learning playground.</p>
+    <p>Ink Circuit is a daily racing game where players compete on procedurally generated tracks. Each day, the track is generated using the <a href="https://en.wikipedia.org/wiki/Convex_hull">convex hull algorithm</a> fitted around a randomly-seeded cluster of 16 points.</p>
+    <!-- <p> <a href="/">links</a>, <strong>bold</strong> and
+      <em>italic</em> all work without any extra markup.</p>
+
+    <h2>A section</h2>
+
+    <p>Sections are labelled the way the cards in the game are: small, spaced
+      capitals in the soft ink colour, so they organise the page without
+      shouting over it.</p>
+
+    <ul>
+      <li>Lists are here when a run of short points reads better than prose.</li>
+      <li>Keep them short — anything longer than a line probably wants to be
+        a paragraph.</li>
+    </ul>
+
+    <h3>A sub-heading</h3>
+
+    <p>Italic and closer to body size, for a turn within a section rather than
+      a new one.</p>
+
+    <blockquote>A pull quote, or a note that wants separating from the
+      argument around it.</blockquote>
+
+    <!-- <p class="fine">Small print, for asides and caveats. Same voice as the
+      notes under the buttons in the game.</p> -->
+
+    <!-- ============================ END ============================ -->
+
+  </main>
+
+  <footer>
+    <span>Ink Circuit</span>
+    <span><a href="/">Play today's circuit</a></span>
+  </footer>
+
+</div>
+
+<script>
+  /* The same paper grain as the game, so the two pages sit on the same
+     surface. Built once at load rather than shipped as an image. */
+  (function grain(){
+    const s = 180, c = document.createElement('canvas');
+    c.width = c.height = s;
+    const g = c.getContext('2d'), img = g.createImageData(s,s);
+    for (let i = 0; i < img.data.length; i += 4){
+      const v = 200 + Math.random()*55;
+      img.data[i] = img.data[i+1] = img.data[i+2] = v;
+      img.data[i+3] = Math.random()*16;
+    }
+    g.putImageData(img,0,0);
+    document.getElementById('card').style.setProperty('--grain', 'url(' + c.toDataURL() + ')');
+  })();
+</script>
+
+</body>
+</html>
