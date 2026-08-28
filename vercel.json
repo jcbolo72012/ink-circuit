@@ -2,6 +2,12 @@
   "outputDirectory": ".",
   "headers": [
     {
+      "source": "/montechiaro-guesser/(.*)?",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
       "source": "/board(.html)?",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }

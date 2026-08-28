@@ -24,6 +24,7 @@ attempt, a shareable result.
     tools/          the colour audit
     test/           conformance suite and the boot smoke test
     experiments/    parked prototypes, not part of the site
+    montechiaro-guesser/  a separate map game for the Sorrento peninsula
 
 `sim.js` is the canonical simulation. Bump `SIM_VERSION_DISCRETE` whenever a
 change alters the outcome of a lap, or stored laps and shared ghosts will be
